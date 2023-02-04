@@ -40,17 +40,17 @@ const dates = [
   },
 ];
 
-// Store dates in local storage
-localStorage.setItem("holidays", JSON.stringify(dates));
+// // Store dates in local storage
+// localStorage.setItem("holidays", JSON.stringify(dates));
 
-// Retrieve dates from local storage
-const storedDates = JSON.parse(localStorage.getItem("holidays"));
+// // Retrieve dates from local storage
+// const storedDates = JSON.parse(localStorage.getItem("holidays"));
 
-// Check if dates were retrieved successfully
-if (storedDates) {
-  // Add retrieved dates to the existing dates array
-  dates.push(...storedDates);
-}
+// // Check if dates were retrieved successfully
+// if (storedDates) {
+//   // Add retrieved dates to the existing dates array
+//   dates.push(...storedDates);
+// }
 
 calculateBtn.addEventListener('click', function() {
   const startDate = new Date(startDateInput.value);
@@ -58,9 +58,9 @@ calculateBtn.addEventListener('click', function() {
   let endDate = new Date(startDate);
   let skippedDates = [];
   let count = 0;
-
+  numberOfDays--;
   while (numberOfDays > 0) {
-    endDate.setDate(endDate.getDate());
+    endDate.setDate(endDate.getDate() + 1);
 
     const formattedDate = endDate.toISOString().split('T')[0];
     if (endDate.getDay() !== 5 && !dates.some(d => d.date === formattedDate)) {
