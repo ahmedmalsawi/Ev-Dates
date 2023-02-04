@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Title</title>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS v5.2.1 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <header>
+    <!-- place navbar here -->
+  </header>
+  <main>
+    <div class="container">
+        <h2>Calculate install Date</h2>
+        <form>
+          <div class="form-group">
+            <label for="start-date">Start Date</label>
+            <input type="date" class="form-control" id="start-date">
+          </div>
+          <div class="form-group">
+            <label for="number-of-days">Number of Days</label>
+            <input type="number" class="form-control" id="number-of-days" min="1">
+          </div>
+          <div class="form-group">
+            <label for="end-date">End Date</label>
+            <input type="date" class="form-control" id="end-date" disabled>
+          </div>
+        </form>
+        <button id="calculate-date" class="btn btn-primary">Calculate End Date</button>
+        <hr>
+        <div class="result-section">
+          <h3 id="result-title">Skipped Days:</h3>
+          <ul id="dates-list"></ul>
+        </div>
+        <!-- <hr>
+        <div class="dates-section" id="datesToSkip">
+        </div>
+        <div class="dates-section">
+          <h3>Dates To Be Skipped</h3>
+          <ul id="dates-to-be-skipped-list">
+          </ul>
+          <button id="add-date" class="btn btn-primary">Add Date</button>
+          <form class="form-inline" id="add-date-form" style="display: none;">
+            <div class="form-group mx-sm-3">
+              <input type="text" class="form-control" id="reason-input" placeholder="Reason">
+            </div>
+            <div class="form-group mx-sm-3">
+              <input type="date" class="form-control" id="date-input">
+            </div>
+            <button type="submit" class="btn btn-success">Add</button>
+            <button type="button" class="btn btn-secondary" id="cancel-add-date">Cancel</button>
+          </form>
+        </div> -->
+      </div>
+      
+  </main>
+  <footer>
+    <!-- place footer here -->
+  </footer>
+  <!-- Bootstrap JavaScript Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
+    integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous">
+  </script>
+  <script src="script.js"></script>
+</body>
+
+</html>
