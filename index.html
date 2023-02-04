@@ -19,23 +19,28 @@
     <!-- place navbar here -->
   </header>
   <main>
-    <div class="container">
-        <h2>Calculate install Date</h2>
-        <form>
-          <div class="form-group">
-            <label for="start-date">Start Date</label>
-            <input type="date" class="form-control" id="start-date">
+    <div class="container-lg text-center">
+      <h2>Calculate install Date</h2>
+      <!-- <form> -->
+          <div class="container-sm align-content-center row ">
+          <div class="form-group col col-md-3 col-sm-12">
+            <label for="start-date">Contract Date</label>
+            <input type="date" class="form-control " id="start-date">
           </div>
-          <div class="form-group">
-            <label for="number-of-days">Number of Days</label>
+          <div class="form-group col col-md-3 col-sm-12">
+            <label for="number-of-days">Duration</label>
             <input type="number" class="form-control" id="number-of-days" min="1">
           </div>
-          <div class="form-group">
-            <label for="end-date">End Date</label>
+          <div class="form-group col col-md-3 col-sm-12">
+            <label for="end-date">Install Date</label>
             <input type="date" class="form-control" id="end-date" disabled>
           </div>
-        </form>
-        <button id="calculate-date" class="btn btn-primary">Calculate End Date</button>
+          <div class="form-group col col-md-3 col-sm-12">
+              <label for="calculate-date">Number of Days</label>
+              <button id="calculate-date" class="btn btn-primary ">Calculate End Date</button>
+            </div>
+        </div>
+        <!-- </form> -->
         <hr>
         <div class="result-section">
           <h3 id="result-title">Skipped Days:</h3>
