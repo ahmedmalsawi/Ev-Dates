@@ -37,24 +37,24 @@
             <input type="date" class="form-control" id="end-date" disabled>
           </div>
           <div class="form-group col col-md-3 col-sm-12 p-2 m-2">
-              <label for="calculate-date">Number of Days</label>
-              <button id="calculate-date" class="btn btn-primary ">Calculate End Date</button>
+              <!-- <label for="calculate-date">Number of Days</label> -->
+              <button id="calculate-date" class="btn btn-primary ">Calculate</button>
             </div>
         </div>
         <!-- </form> -->
         <hr>
-        <div class="result-section">
-          <h3 id="result-title">Skipped Days:</h3>
-          <ul id="dates-list"></ul>
+        <div class="result-section card p-2 m-2">
+          <h3 id="result-title" class="card-header">Skipped Days:</h3>
+          <ul id="dates-list" class="card-body"></ul>
         </div>
 <!-- ////////////////////////////////////////////////////////////////////////////// -->
 <div class="container">
-  <div class="holidays-list row text-center">
+  <div class="holidays-list row text-center ">
     <div class="container btn-success btn show-list col col-4" id="vacation-list">
       Vacations list
     </div>
   </div>
-  <div class="holiday-list container mt-5" id="holidays-table-div">
+  <div class="holiday-list container mt-5 card-body" id="holidays-table-div">
     <table class="table table-striped" id="holidays-table">
       <thead>
         <tr>
@@ -67,34 +67,17 @@
     </table>
   </div>
   
-  <div class="add-holiday-menu container mt-5">
-    <div class="form-group">
-      <input type="date" name="addDate" id="addDate" class="form-control">
-      <input type="text" name="addReason" id="addReason" class="form-control mt-2">
-      <button class="btn btn-primary mt-2" id="add-holiday-btn">Add Holiday</button>
+  <div class="container p-2 m-2">
+    <div class="add-holiday-menu row text-center ">
+      <div class="container show-list col col-8" >
+      <input type="date" name="addDate" id="addDate" class="form-control col col-4">
+      <input type="text" name="addReason" id="addReason" class="form-control mt-2 col col-4">
+    <!-- </div> -->
+    <button class="btn btn-primary mt-2 " id="add-holiday-btn">Add Holiday</button>
     </div>
   </div>
 </div>
-        
-        <!-- <hr>
-        <div class="dates-section" id="datesToSkip">
-        </div>
-        <div class="dates-section">
-          <h3>Dates To Be Skipped</h3>
-          <ul id="dates-to-be-skipped-list">
-          </ul>
-          <button id="add-date" class="btn btn-primary">Add Date</button>
-          <form class="form-inline" id="add-date-form" style="display: none;">
-            <div class="form-group mx-sm-3">
-              <input type="text" class="form-control" id="reason-input" placeholder="Reason">
-            </div>
-            <div class="form-group mx-sm-3">
-              <input type="date" class="form-control" id="date-input">
-            </div>
-            <button type="submit" class="btn btn-success">Add</button>
-            <button type="button" class="btn btn-secondary" id="cancel-add-date">Cancel</button>
-          </form>
-        </div> -->
+
       </div>
       
   </main>

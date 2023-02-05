@@ -84,6 +84,7 @@ calculateBtn.addEventListener('click', function() {
   skippedDates.forEach(function(date) {
     const li = document.createElement('li');
     li.textContent = `${date.date} - ${date.reason}`;
+    li.classList = "list-group-item list-group-item-action list-group-item-light";
     datesList.appendChild(li);
   });
 });
