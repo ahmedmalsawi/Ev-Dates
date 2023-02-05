@@ -40,17 +40,17 @@ const dates = [
   },
 ];
 
-// // Store dates in local storage
+// Store dates in local storage
 // localStorage.setItem("holidays", JSON.stringify(dates));
 
-// // Retrieve dates from local storage
-// const storedDates = JSON.parse(localStorage.getItem("holidays"));
+// Retrieve dates from local storage
+const storedDates = JSON.parse(localStorage.getItem("holidays"));
 
-// // Check if dates were retrieved successfully
-// if (storedDates) {
-//   // Add retrieved dates to the existing dates array
-//   dates.push(...storedDates);
-// }
+// Check if dates were retrieved successfully
+if (storedDates) {
+  // Add retrieved dates to the existing dates array
+  dates.push(...storedDates);
+}
 
 calculateBtn.addEventListener('click', function() {
   const startDate = new Date(startDateInput.value);
@@ -63,7 +63,9 @@ calculateBtn.addEventListener('click', function() {
     endDate.setDate(endDate.getDate() + 1);
 
     const formattedDate = endDate.toISOString().split('T')[0];
-    if (endDate.getDay() !== 5 && !dates.some(d => d.date === formattedDate)) {
+    // if (endDate.getDay() !== 5 && !dates.some(d => d.date === formattedDate)) {
+      if (endDate.getDay() !== 5 && !holidays.some(d => d.date === formattedDate)) {
+
       numberOfDays--;
     } else {
       skippedDates.push({ date: formattedDate, reason: getReason(formattedDate) });
@@ -85,6 +87,165 @@ calculateBtn.addEventListener('click', function() {
     datesList.appendChild(li);
   });
 });
+
+
+
+
+
+//////////////////////
+
+
+// $(document).ready(function() {
+//   let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
+//   console.log(holidays);
+//   let tableBody = $("#holidays-tbody");
+//   holidays.forEach(function(holiday) {
+//     let row = $(
+//       "<tr><td>" +
+//         holiday.reason +
+//         "</td><td>" +
+//         holiday.date +
+//         "</td><td><button class='edit-btn'>Edit</button><button class='delete-btn'>Delete</button></td></tr>"
+//     );
+//     tableBody.append(row);
+//   });
+//   $("#add-holiday-btn").click(function() {
+//     let reason = prompt("Enter reason for the holiday:");
+//     let date = prompt("Enter date of the holiday (YYYY-MM-DD):");
+//     holidays.push({ reason: reason, date: date });
+//     localStorage.setItem("holidays", JSON.stringify(holidays));
+//     let row = $(
+//       "<tr><td>" +
+//         reason +
+//         "</td><td>" +
+//         date +
+//         "</td><td><button class='edit-btn'>Edit</button><button class='delete-btn'>Delete</button></td></tr>"
+//     );
+//     tableBody.append(row);
+//   });
+  // $(document).on("click", ".edit-btn", function() {
+  //   let row = $(this).closest("tr");
+  //   let reason = row.find("td:first").text();
+  //   let date = row.find("td:nth-child(2)").text();
+  //   let newReason = prompt("Enter new reason:", reason);
+  //   let newDate = prompt("Enter new date (YYYY-MM-DD):", date);
+  //   row.find("td:first").text(newReason);
+  //   row.find("td:nth-child(2)").text(newDate);
+  //   let index = holidays.findIndex(function(holiday) {
+  //     return holiday.reason === reason && holiday.date === date;
+  //   });
+  //   holidays[index] = { reason: newReason, date: newDate };
+  //   localStorage.setItem("holidays", JSON.stringify(holidays));
+  // });
+//   $(document).on("click", ".delete-btn", function() {
+//     let row = $(this).closest("tr");
+//     let reason = row.find("td:first").text();
+// // Add holiday
+// function addHoliday() {
+//   const reason = document.getElementById("reason").value;
+//   const date = document.getElementById("date").value;
+//   const holiday = { reason, date };
+  
+//   let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
+//   holidays.push(holiday);
+//   localStorage.setItem("holidays", JSON.stringify(holidays));
+//   displayHolidays();
+//   }
+  
+//   // Edit holiday
+//   function editHoliday(index) {
+//   const reason = document.getElementById("reason").value;
+//   const date = document.getElementById("date").value;
+//   let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
+//   holidays[index] = { reason, date };
+//   localStorage.setItem("holidays", JSON.stringify(holidays));
+//   displayHolidays();
+//   }
+  
+//   // Delete holiday
+//   function deleteHoliday(index) {
+//   let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
+//   holidays.splice(index, 1);
+//   localStorage.setItem("holidays", JSON.stringify(holidays));
+//   displayHolidays();
+//   }
+  
+//   // Display holidays
+//   function displayHolidays() {
+//   let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
+//   let holidayList = document.getElementById("holiday-list");
+//   holidayList.innerHTML = "";
+  
+//   for (let i = 0; i < holidays.length; i++) {
+//   holidayList.innerHTML += <li> ${holidays[i].reason} - ${holidays[i].date} <button onclick="editHoliday(${i})">Edit</button> <button onclick="deleteHoliday(${i})">Delete</button> </li> ;
+//   }
+//   }
+  
+//   // Initial display of holidays on page load
+//   displayHolidays();
+
+
+/////////////////////////////////////////////////////////////////////////////
+// $(document).ready(function() {
+  let holidays = JSON.parse(localStorage.getItem("holidays")) || [];
+
+  function addHoliday() {
+    const reason = document.getElementById("addReason").value;
+    const date = document.getElementById("addDate").value;
+    holidays.push({ reason, date });
+    localStorage.setItem("holidays", JSON.stringify(holidays));
+    displayHolidays();
+  }
+
+  function editHoliday(index) {
+    const reason = prompt("Enter a new reason");
+    const date = prompt("Enter a new date (Year-Month-Day)");
+    holidays[index] = { reason, date };
+    localStorage.setItem("holidays", JSON.stringify(holidays));
+    displayHolidays();
+  }
+
+  function deleteHoliday(index) {
+    holidays.splice(index, 1);
+    localStorage.setItem("holidays", JSON.stringify(holidays));
+    displayHolidays();
+  }
+
+  function displayHolidays() {
+    let tbody = document.getElementById("holidays-tbody");
+    tbody.innerHTML = "";
+
+    for (let i = 0; i < holidays.length; i++) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${holidays[i].reason}</td>
+          <td>${holidays[i].date}</td>
+          <td>
+          <button class="btn btn-warning edit-btn" onclick="editHoliday(${i})">Edit</button> 
+          <button class="btn btn-danger delete-btn" onclick="deleteHoliday(${i})">Delete</button>
+            </td>
+        </tr>
+      `;
+    }
+  }
+
+  displayHolidays();
+
+  document.getElementById("add-holiday-btn").addEventListener("click", addHoliday);
+// });
+
+
+
+document.getElementById("vacation-list").addEventListener("click", function() {
+  let table = document.getElementById("holidays-table-div");
+  if (table.style.display === "none") {
+  table.style.display = "flex";
+  } else {
+  table.style.display = "none";
+  }
+  });
+
+
 
 
 
