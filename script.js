@@ -41,8 +41,9 @@ const dates = [
 ];
 
 // Store dates in local storage
-// localStorage.setItem("holidays", JSON.stringify(dates));
-
+if (!localStorage.getItem("holidays")) {
+  localStorage.setItem("holidays", JSON.stringify(dates));
+}
 // Retrieve dates from local storage
 const storedDates = JSON.parse(localStorage.getItem("holidays"));
 
