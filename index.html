@@ -19,7 +19,6 @@
   <header>
     <div class="container  header text-center w-50 pb-0 mb-0 m-0 rounded-5 mx-auto bg-body mb-0 pb-0 pt-2 mt-2">
       <div class="fs-2 text-red-600 ">Fonon Hawwa</div>
-      <!-- <p id="head" class="head fs-7 w-100 m-0 p-0 text-center font-bold"> حاسبة الأسعار (V 1.0)</p> -->
       <div class="row ">
         <div  class="titleButton  section text-danger btn-success align-center text-center border-0 hover:text-bg-dark pb-2 pt-0 mt-0">
           <h2>Calculate Date</h2>
@@ -33,26 +32,47 @@
       <!-- <form> -->
         <!-- <div class="card"> -->
           <div class=" row col-12">
-            <div class="start-date col col-md-3 col-sm-3 m-2 p-2 form-floating placeholder:text-center">
-              <input type="date" class="form-control " id="start-date" value="" placeholder="dd/mm/yyyy">
-              <label for="start-date">Start Date</label>
+            <div class="start-date-diff col col-md-3 col-sm-3 m-2 p-2 form-floating placeholder:text-center">
+              <input type="date" class="form-control " id="start-date-diff" value="" placeholder="dd/mm/yyyy">
+              <label for="start-date-diff">Start Date</label>
+            </div>
+            <div class="end-date-diff col col-md-3 col-sm-3 m-2 p-2 form-floating placeholder:text-center">
+              <input type="date" class="form-control " id="end-date-diff" value="" placeholder="dd/mm/yyyy">
+              <label for="end-date-diff">End Date</label>
             </div>
             <div
-              class="number-of-days col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
-              <input type="number" class="form-control" id="number-of-days" value="" placeholder="Ex:" min="1">
-              <label for="number-of-days">Duration</label>
-            </div>
-            <div class="end-date col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
-              <input type="date" class="form-control" id="end-date" value="" placeholder="dd/mm/yyyy" disabled>
-              <label for="end-date">Install Date</label>
+              class="number-of-days-diff col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
+              <input type="number" class="form-control" id="number-of-days-diff" value="" placeholder="Ex:" min="1" disabled>
+              <label for="number-of-days-diff">Duration</label>
             </div>
             <div
-              class="container btn btn-primary btn show-list col col-2  m-4 mx-auto"
-              placeholder="Ex:" id="calculate-date">Calculate</div>
+              class="container btn btn-warning btn show-list col col-2  m-4 mx-auto"
+              placeholder="Ex:" id="calculate-date-diff">Calculate Difference</div>
           </div>
         <!-- </div> -->
         <!-- </div> -->
         <hr>
+        <div class=" row col-12">
+          <div class="start-date col col-md-3 col-sm-3 m-2 p-2 form-floating placeholder:text-center">
+            <input type="date" class="form-control " id="start-date" value="" placeholder="dd/mm/yyyy">
+            <label for="start-date">Start Date</label>
+          </div>
+          <div
+            class="number-of-days col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
+            <input type="number" class="form-control" id="number-of-days" value="" placeholder="Ex:" min="1">
+            <label for="number-of-days">Duration</label>
+          </div>
+          <div class="end-date col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
+            <input type="date" class="form-control" id="end-date" value="" placeholder="dd/mm/yyyy" disabled>
+            <label for="end-date">Install Date</label>
+          </div>
+          <div
+            class="container btn btn-primary btn show-list col col-2  m-4 mx-auto"
+            placeholder="Ex:" id="calculate-date">Calculate</div>
+        </div>
+      <!-- </div> -->
+      <!-- </div> -->
+      <hr>
         <div class="result-section card p-2 m-2">
           <h3 id="result-title" class="card-header">Skipped Days:</h3>
           <ul id="dates-list" class="card-body"></ul>

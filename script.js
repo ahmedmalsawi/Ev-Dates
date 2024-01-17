@@ -91,7 +91,24 @@ calculateBtn.addEventListener('click', function() {
 });
 
 
+document.getElementById('calculate-date-diff').addEventListener('click', function () {
+  // Get the values of the start and end date inputs
+  var startDate = document.getElementById('start-date-diff').value;
+  var endDate = document.getElementById('end-date-diff').value;
 
+  // Convert the date strings to Date objects
+  var startDateObj = new Date(startDate);
+  var endDateObj = new Date(endDate);
+
+  // Calculate the difference in milliseconds
+  var timeDiff = endDateObj - startDateObj;
+
+  // Calculate the difference in days
+  var daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+  // Update the duration input with the calculated difference
+  document.getElementById('number-of-days-diff').value = daysDiff;
+});
 
 
 //////////////////////
