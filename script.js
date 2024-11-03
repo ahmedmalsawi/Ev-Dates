@@ -35,9 +35,78 @@ const dates = [
     date: "2023-09-23",
   },
   {
+    reason: "Eid Alfetr",
+    date: "2024-04-10",
+  },
+  {
+    reason: "Eid Alfetr",
+    date: "2024-04-11",
+  },
+  {
+    reason: "Eid Alfetr",
+    date: "2024-04-13",
+  },
+  {
+    reason: "Eid Aladha",
+    date: "2024-06-17",
+  },
+  {
+    reason: "Eid Aladha",
+    date: "2024-06-18",
+  },
+  {
+    reason: "Arafah Day",
+    date: "2024-06-15",
+  },
+  {
+    reason: "Eid Aladha",
+    date: "2024-06-16",
+  },
+  {
     reason: "National Day",
     date: "2024-09-23",
   },
+  {
+    reason: "National Holiday",
+    date: "2025-02-25",
+  },
+  {
+    reason: "National Day",
+    date: "2025-09-23",
+  },
+  {
+    reason: "Eid Alfetr",
+    date: "2025-03-31",
+  },
+  {
+    reason: "Eid Alfetr",
+    date: "2025-04-01",
+  },
+  {
+    reason: "Eid Alfetr",
+    date: "2025-04-02",
+  },
+  {
+    reason: "Eid Alfetr",
+    date: "2025-04-03",
+  },
+  {
+    reason: "Eid Aladha",
+    date: "2025-06-06",
+  },
+  {
+    reason: "Eid Aladha",
+    date: "2025-06-07",
+  },
+  {
+    reason: "Eid Aladha",
+    date: "2025-06-08",
+  },
+  {
+    reason: "Eid Aladha",
+    date: "2025-06-09",
+  },
+
 ];
 
 // Store dates in local storage
