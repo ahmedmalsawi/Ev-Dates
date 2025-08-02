@@ -1,4 +1,97 @@
-#holidays-table-div{
-display:none;
+/* =====================[ General ]===================== */
 
-}
+/* إخفاء جدول الإجازات في البداية */
+#holidays-table-div {
+    display: none;
+  }
+  
+  /* Header */
+  header {
+    background: #111827 !important;
+    color: white !important;
+  }
+  
+  /* Card Headers */
+  .card-header {
+    background: #1F2937 !important;
+    color: white;
+    font-weight: bold;
+  }
+  
+  /* Table Header */
+  .table thead {
+    background-color: #111827;
+    color: white;
+  }
+  
+  /* =====================[ Buttons ]===================== */
+  
+  /* Primary Buttons */
+  .btn-primary {
+    background-color: #356614 !important;
+    border-color: #111827 !important;
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: #374151 !important;
+    border-color: #374151 !important;
+  }
+  
+  /* Success Buttons (Export, Import) */
+  .btn-success {
+    background-color: #0d3f85 !important;
+    border-color: #1F2937 !important;
+    color: white;
+  }
+  .btn-success:hover {
+    background-color: #374151 !important;
+    border-color: #374151 !important;
+  }
+  
+  /* Info Buttons */
+  .btn-info {
+    background-color: #1F2937 !important;
+    border-color: #1F2937 !important;
+    color: white;
+  }
+  .btn-info:hover {
+    background-color: #374151 !important;
+    border-color: #374151 !important;
+  }
+  
+  /* Toast Button Style */
+  .btn-view-details {
+    background-color: #2563EB;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    padding: 2px 10px;
+    border: none;
+    transition: all 0.3s ease;
+  }
+  .btn-view-details:hover {
+    background-color: #1E40AF;
+    color: white;
+  }
+  
+  /* =====================[ Toast & Modal ]===================== */
+  
+  /* Toast */
+  #skippedToast {
+    background-color: #111827 !important;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  
+  /* Toast Position */
+  .position-fixed.top-0.start-50.translate-middle-x {
+    z-index: 1055;
+  }
+  
+  /* Modal Header */
+  #skippedModal .modal-header {
+    background: #111827 !important;
+    color: white;
+  }
+  

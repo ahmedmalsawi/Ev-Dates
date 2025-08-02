@@ -1,130 +1,150 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-  <title>Calculate install Date</title>
-  <!-- Required meta tags -->
+  <title>Fonon Hawwa - Calculate Install Date</title>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap CSS v5.2.1 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="style.css">
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
-  <header>
-    <div class="container  header text-center w-50 pb-0 mb-0 m-0 rounded-5 mx-auto bg-body mb-0 pb-0 pt-2 mt-2">
-      <div class="fs-2 text-red-600 ">Fonon Hawwa</div>
-      <div class="row ">
-        <div  class="titleButton  section text-danger btn-success align-center text-center border-0 hover:text-bg-dark pb-2 pt-0 mt-0">
-          <h2>Calculate Date</h2>
-        </div>
-        </div>
-        </div>
+<body class="bg-light">
+
+  <!-- Header -->
+  <header class="py-3 text-center bg-dark text-white shadow-sm">
+    <h1 class="fw-bold mb-0">Fonon Hawwa</h1>
+    <p class="mb-0 small opacity-75">Calculate Install Date</p>
   </header>
 
-  <main>
-    <div class="container-lg text-center p-2">
-      <!-- <form> -->
-        <!-- <div class="card"> -->
-          <div class=" row col-12">
-            <div class="start-date-diff col col-md-3 col-sm-3 m-2 p-2 form-floating placeholder:text-center">
-              <input type="date" class="form-control " id="start-date-diff" value="" placeholder="dd/mm/yyyy">
-              <label for="start-date-diff">Start Date</label>
-            </div>
-            <div class="end-date-diff col col-md-3 col-sm-3 m-2 p-2 form-floating placeholder:text-center">
-              <input type="date" class="form-control " id="end-date-diff" value="" placeholder="dd/mm/yyyy">
-              <label for="end-date-diff">End Date</label>
-            </div>
-            <div
-              class="number-of-days-diff col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
-              <input type="number" class="form-control" id="number-of-days-diff" value="" placeholder="Ex:" min="1" disabled>
-              <label for="number-of-days-diff">Duration</label>
-            </div>
-            <div
-              class="container btn btn-warning btn show-list col col-2  m-4 mx-auto"
-              placeholder="Ex:" id="calculate-date-diff">Calculate Difference</div>
-          </div>
-        <!-- </div> -->
-        <!-- </div> -->
-        <hr>
-        <div class=" row col-12">
-          <div class="start-date col col-md-3 col-sm-3 m-2 p-2 form-floating placeholder:text-center">
-            <input type="date" class="form-control " id="start-date" value="" placeholder="dd/mm/yyyy">
-            <label for="start-date">Start Date</label>
-          </div>
-          <div
-            class="number-of-days col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
-            <input type="number" class="form-control" id="number-of-days" value="" placeholder="Ex:" min="1">
-            <label for="number-of-days">Duration</label>
-          </div>
-          <div class="end-date col-md-3 col-sm-3  m-2 p-2 form-floating placeholder:text-center">
-            <input type="date" class="form-control" id="end-date" value="" placeholder="dd/mm/yyyy" disabled>
-            <label for="end-date">Install Date</label>
-          </div>
-          <div
-            class="container btn btn-primary btn show-list col col-2  m-4 mx-auto"
-            placeholder="Ex:" id="calculate-date">Calculate</div>
-        </div>
-      <!-- </div> -->
-      <!-- </div> -->
-      <hr>
-        <div class="result-section card p-2 m-2">
-          <h3 id="result-title" class="card-header">Skipped Days:</h3>
-          <ul id="dates-list" class="card-body"></ul>
-        </div>
-<!-- ////////////////////////////////////////////////////////////////////////////// -->
-<div class="container">
-  <div class="holidays-list row text-center ">
-    <div class="container btn-success btn show-list col col-4" id="vacation-list">
-      Vacations list
-    </div>
+  <main class="container my-4">
+
+    <!-- Calculate Difference -->
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-dark text-white fw-bold">
+        <i class="fa-solid fa-calendar-day me-2"></i>Calculate Date Difference
+      </div>
+      <div class="card-body row g-2">
+        <div class="col-md-4"><input type="date" id="start-date-diff" class="form-control"></div>
+        <div class="col-md-4"><input type="date" id="end-date-diff" class="form-control"></div>
+        <div class="col-md-2"><input type="number" id="number-of-days-diff" class="form-control" placeholder="Duration" disabled></div>
+        <div class="col-md-2"><button class="btn btn-warning w-100" id="calculate-date-diff"><i class="fa-solid fa-calculator me-1"></i>Calc</button></div>
+      </div>
+    </section>
+
+    <!-- Calculate End Date -->
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-dark text-white fw-bold">
+        <i class="fa-solid fa-calendar-check me-2"></i>Calculate Install Date
+      </div>
+      <div class="card-body row g-2">
+        <div class="col-md-4"><input type="date" id="start-date" class="form-control"></div>
+        <div class="col-md-4"><input type="number" id="number-of-days" class="form-control" placeholder="Duration"></div>
+        <div class="col-md-2"><input type="date" id="end-date" class="form-control" disabled></div>
+        <div class="col-md-2"><button class="btn btn-primary w-100" id="calculate-date"><i class="fa-solid fa-check me-1"></i>Calc</button></div>
+      </div>
+    </section>
+<!-- Skipped Days -->
+<section class="card shadow-sm mb-4">
+  <div class="card-header bg-dark text-white fw-bold">
+    <i class="fa-solid fa-calendar-xmark me-2"></i>Skipped Days
   </div>
-  <div class="holiday-list container mt-5 card-body" id="holidays-table-div">
-    <table class="table table-striped" id="holidays-table">
-      <thead>
-        <tr>
-          <th>Reason</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="holidays-tbody"></tbody>
-    </table>
+  <div class="card-body text-center">
+    <button class="btn btn-outline-info" id="view-skipped" data-bs-toggle="modal" data-bs-target="#skippedModal">
+      <i class="fa-solid fa-eye me-1"></i> View Skipped Days
+    </button>
   </div>
-  
-  <div class="container p-2 m-2">
-    <div class="add-holiday-menu row text-center ">
-      <div class="container show-list col col-8" >
-      <input type="date" name="addDate" id="addDate" class="form-control col col-4">
-      <input type="text" name="addReason" id="addReason" class="form-control mt-2 col col-4">
-    <!-- </div> -->
-    <button class="btn btn-primary mt-2 " id="add-holiday-btn">Add Holiday</button>
+</section>\
+
+<!-- Skipped Modal -->
+<div class="modal fade" id="skippedModal" tabindex="-1" aria-labelledby="skippedModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="skippedModalLabel">Skipped Days Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped text-center">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="skippedTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
-      </div>
-      
-  </main>
-  <footer>
-    <!-- place footer here -->
-  </footer>
-  <!-- Bootstrap JavaScript Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
-    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
-  </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
-    integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <!-- Vacations List -->
+    <section class="card shadow-sm mb-4">
+      <div class="card-header bg-dark text-white fw-bold">
+        <i class="fa-solid fa-list me-2"></i>Vacations List
+      </div>
+      <div class="card-body">
+
+        <!-- Export / Import -->
+        <div class="d-flex gap-2 mb-3 flex-wrap">
+          <button class="btn btn-success flex-fill" id="exportExcel"><i class="fa-solid fa-file-export me-1"></i>Export</button>
+          <label for="importExcel" class="btn btn-info flex-fill text-white"><i class="fa-solid fa-file-import me-1"></i>Import</label>
+          <input type="file" id="importExcel" accept=".xlsx, .xls" class="d-none">
+        </div>
+
+        <!-- Add Holiday -->
+        <div class="row g-2 mb-3">
+          <div class="col-md-4"><input type="date" id="addDate" class="form-control"></div>
+          <div class="col-md-6"><input type="text" id="addReason" class="form-control" placeholder="Reason"></div>
+          <div class="col-md-2"><button class="btn btn-primary w-100" id="add-holiday-btn"><i class="fa-solid fa-plus me-1"></i>Add</button></div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Reason</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="holidays-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast موحد -->
+  <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055">
+    <div id="skippedToast" class="toast align-items-center text-bg-dark border-0 shadow-lg" role="alert">
+      <div class="d-flex align-items-center">
+        <div class="toast-body" id="skippedToastBody">
+          Calculation done!
+        </div>
+        <button type="button" class="btn btn-primary btn-sm ms-3 me-2" id="viewSkippedBtn">
+          <i class="fa-solid fa-eye"></i> View Details
+        </button>
+        <button type="button" class="btn-close btn-close-white m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  
+  
+
+  <!-- Bootstrap & Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="script.js"></script>
 </body>
-
 </html>
