@@ -13,6 +13,10 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 </head>
 
 <body class="bg-light">
@@ -54,15 +58,22 @@
 <section class="card shadow-sm mb-4">
   <div class="card-header bg-dark text-white fw-bold">
     <i class="fa-solid fa-calendar-xmark me-2"></i>Skipped Days
+    
   </div>
   <div class="card-body text-center">
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="exportSkippedPDF">
+        <i class="fa-solid fa-file-pdf"></i> Export PDF
+      </button>
+    <!-- </div> -->
     <button class="btn btn-outline-info" id="view-skipped" data-bs-toggle="modal" data-bs-target="#skippedModal">
       <i class="fa-solid fa-eye me-1"></i> View Skipped Days
     </button>
   </div>
-</section>\
+</div>
+  </section>
 
-<!-- Skipped Modal -->
+<!-- Skipped Modal
 <div class="modal fade" id="skippedModal" tabindex="-1" aria-labelledby="skippedModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -87,6 +98,35 @@
 <div class="card shadow-sm mb-4">
   <div class="card-header bg-primary text-white">Vacations Tree View</div>
   <div class="card-body" id="vacationsTree"></div>
+</div> -->
+<!-- Skipped Modal -->
+<div class="modal fade" id="skippedModal" tabindex="-1" aria-labelledby="skippedModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="skippedModalLabel">Skipped Days Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="skippedTableBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <!-- زرار التصدير إلى PDF -->
+        <!-- <button id="exportSkippedPDF" class="btn btn-danger"> -->
+          <!-- <i class="fa-solid fa-file-pdf"></i> Export as PDF -->
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 
