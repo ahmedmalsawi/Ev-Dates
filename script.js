@@ -89,13 +89,120 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="btn btn-warning" onclick="editHoliday(${i})">Edit</button>
           <button class="btn btn-danger" onclick="deleteHoliday(${i})">Delete</button>
         </td>
-      </tr>`).join('');
+      </tr>`).join('');  
   };
+
+
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  const getWeekNumber = (dateString) => {
+    const date = new Date(dateString);
+    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    
+    // ضبط ليبدأ الأسبوع من السبت
+    const offset = (firstDayOfMonth.getDay() + 1) % 7; // السبت = 0
+    const dayOfMonth = date.getDate();
+    return Math.floor((dayOfMonth + offset - 1) / 7) + 1;
+  };
+  
+  const displayVacationsTree = () => {
+    const treeContainer = document.getElementById("vacationsTree");
+    if (!treeContainer) return;
+  
+    // ترتيب الإجازات حسب السنة والشهر والأسبوع
+    const grouped = {};
+    holidays.forEach(h => {
+      const [year, month, day] = h.date.split("-");
+      if (!grouped[year]) grouped[year] = {};
+      if (!grouped[year][month]) grouped[year][month] = {};
+      
+      const weekNumber = getWeekNumber(h.date);
+      if (!grouped[year][month][weekNumber]) grouped[year][month][weekNumber] = [];
+      
+      grouped[year][month][weekNumber].push({ day, reason: h.reason });
+    });
+  
+    // توليد Accordion للسنة والشهر والأسبوع
+    let html = `<div class="accordion" id="vacationAccordion">`;
+    Object.keys(grouped).sort().forEach((year, yIndex) => {
+      html += `
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading${yIndex}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${yIndex}">
+              ${year}
+            </button>
+          </h2>
+          <div id="collapse${yIndex}" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <div class="accordion" id="yearAccordion${yIndex}">
+      `;
+      Object.keys(grouped[year]).sort().forEach((month, mIndex) => {
+        const monthNum = parseInt(month, 10) - 1;
+        const monthName = monthNames[monthNum] || `Month ${month}`;
+        const weeks = Object.keys(grouped[year][month]).length;
+  
+        html += `
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading${yIndex}-${mIndex}">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${yIndex}-${mIndex}">
+                ${monthName} (${weeks} weeks)
+              </button>
+            </h2>
+            <div id="collapse${yIndex}-${mIndex}" class="accordion-collapse collapse">
+              <div class="accordion-body">
+                <div class="accordion" id="monthAccordion${yIndex}-${mIndex}">
+        `;
+        Object.keys(grouped[year][month]).sort((a, b) => a - b).forEach((weekNum, wIndex) => {
+          const daysCount = grouped[year][month][weekNum].length;
+          html += `
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading${yIndex}-${mIndex}-${wIndex}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${yIndex}-${mIndex}-${wIndex}">
+                  Week ${weekNum} (${daysCount} days)
+                </button>
+              </h2>
+              <div id="collapse${yIndex}-${mIndex}-${wIndex}" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <ul class="list-group">
+          `;
+          grouped[year][month][weekNum].sort((a, b) => a.day - b.day).forEach(item => {
+            html += `<li class="list-group-item">${item.day} - ${item.reason}</li>`;
+          });
+          html += `
+                  </ul>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        html += `
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += `
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  
+    treeContainer.innerHTML = html;
+  };
+  
 
   /* ==================[ Functions ]================== */
   const calculateEndDate = () => {
     if (!startDateInput.value || !numberOfDaysInput.value) {
-      showToast("⚠ Please fill start date and duration!", "warning");
+      showToast("⚠ Please fill start date and duration!", "danger");
       return;
     }
 
@@ -132,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const calculateDateDiff = () => {
     if (!startDateDiff.value || !endDateDiff.value) {
-      showToast("⚠ Please fill start and end date!", "warning");
+      showToast("⚠ Please fill start and end date!", "success");
       return;
     }
     numberOfDaysDiff.value = Math.floor((new Date(endDateDiff.value) - new Date(startDateDiff.value)) / (1000 * 60 * 60 * 24));
@@ -143,13 +250,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const reason = document.getElementById("addReason").value.trim();
     const date = document.getElementById("addDate").value.trim();
     if (!reason || !date) {
-      showToast("⚠ Please fill both date and reason!", "warning");
+      showToast("⚠ Please fill both date and reason!", "success");
       return;
     }
     holidays.push({ reason, date });
     saveHolidays();
     displayHolidays();
-    showToast("✅ Holiday added successfully!", "success");
+    showToast("✅ Holiday added successfully!", "succsess");
   };
 
   window.editHoliday = (index) => {
@@ -226,4 +333,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ==================[ Init ]================== */
   displayHolidays();
+  displayVacationsTree();
+
 });
