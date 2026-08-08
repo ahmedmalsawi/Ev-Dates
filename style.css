@@ -779,6 +779,19 @@ body {
   color: #1d4ed8;
 }
 
+.install-card-initial .surface-card-header {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.install-card-initial .install-big-number {
+  color: #059669;
+}
+
+.install-card-initial .install-date {
+  color: #065f46;
+}
+
 .install-big-number {
   font-size: clamp(1.45rem, 3vw, 1.85rem);
   font-weight: 800;

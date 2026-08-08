@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const shortContractWarning = document.getElementById('short-contract-warning');
   const contractDelayResultsEl = document.getElementById('contract-delay-results');
   const installSuggestionCard = document.getElementById('install-suggestion-card');
+  const installInitialCard = document.getElementById('install-initial-card');
   const readyMessageEl = document.getElementById('ready-message');
 
   let holidays = [];
@@ -761,6 +762,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   };
 
+  // أيام التركيب المبدئي: السبت / الاثنين / الأربعاء — الأولوية لليوم السابق أو نفس اليوم
+  const INSTALL_SLOT_DAYS = new Set([6, 1, 3]); // Sat, Mon, Wed
+  const ARABIC_WEEKDAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+  const toInitialInstallDate = (suggestedDate) => {
+    if (!suggestedDate) return null;
+    const d = new Date(
+      suggestedDate.getFullYear(),
+      suggestedDate.getMonth(),
+      suggestedDate.getDate()
+    );
+    let daysBack = 0;
+    while (!INSTALL_SLOT_DAYS.has(d.getDay()) && daysBack < 7) {
+      d.setDate(d.getDate() - 1);
+      daysBack += 1;
+    }
+    const dayName = ARABIC_WEEKDAYS[d.getDay()];
+    const suggestedIso = formatLocalDate(suggestedDate);
+    const note = daysBack === 0
+      ? `(الموعد المقترح ${suggestedIso} يوافق يوم تركيب — ${dayName})`
+      : `(من الموعد المقترح ${suggestedIso} إلى أقرب يوم تركيب سابق — ${dayName})`;
+    return { date: d, dayName, daysBack, note };
+  };
+
   const loadBranding = () => {
     let stored = {};
     try {
@@ -959,13 +984,24 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     const install = suggestInstallation(duration, actualWO, actualPay);
+    const initialInstall = install ? toInitialInstallDate(install.date) : null;
+    const installDayName = install ? ARABIC_WEEKDAYS[install.date.getDay()] : null;
     if (install) {
       installSuggestionCard.classList.remove('d-none');
       document.getElementById('result-install-offset').textContent = `${install.offset} يوم عادي`;
-      document.getElementById('result-install-date').textContent = `(${formatLocalDate(install.date)})`;
+      document.getElementById('result-install-date').textContent =
+        `(${installDayName} · ${formatLocalDate(install.date)})`;
       document.getElementById('result-install-note').textContent = install.note;
     } else {
       installSuggestionCard.classList.add('d-none');
+    }
+    if (initialInstall && installInitialCard) {
+      installInitialCard.classList.remove('d-none');
+      document.getElementById('result-initial-day').textContent = initialInstall.dayName;
+      document.getElementById('result-initial-date').textContent = `(${formatLocalDate(initialInstall.date)})`;
+      document.getElementById('result-initial-note').textContent = initialInstall.note;
+    } else {
+      installInitialCard?.classList.add('d-none');
     }
 
     lastReadyMessage = buildReadyMessage({
@@ -994,6 +1030,9 @@ document.addEventListener('DOMContentLoaded', () => {
       repGrace,
       payGrace,
       installDate: install ? formatLocalDate(install.date) : null,
+      installDay: installDayName,
+      initialInstallDate: initialInstall ? formatLocalDate(initialInstall.date) : null,
+      initialInstallDay: initialInstall ? initialInstall.dayName : null,
       message: lastReadyMessage
     };
 
@@ -1117,6 +1156,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .install .lbl{font-size:11px; font-weight:800; color:#1d4ed8}
     .install .date{font-size:16px; font-weight:800; color:#1e3a8a}
     .install .note{font-size:10px; color:#1e40af; font-weight:600; margin-top:1px}
+    .install.install-initial{background:linear-gradient(135deg,#ecfdf5,#d1fae5); border-color:#6ee7b7}
+    .install.install-initial .lbl{color:#047857}
+    .install.install-initial .date{color:#065f46; font-size:14px}
+    .install.install-initial .note{color:#065f46}
     .message-box{
       border:1px solid var(--line); border-radius:10px; overflow:hidden;
       flex:1 1 auto; min-height:0; display:flex; flex-direction:column;
@@ -1191,7 +1234,15 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="lbl">موعد التركيب المقترح</div>
           <div class="note">محسوب حسب قواعد مدة العقد</div>
         </div>
-        <div class="date">${escapeHtml(s.installDate)}</div>
+        <div class="date">${s.installDay ? `${escapeHtml(s.installDay)} · ` : ''}${escapeHtml(s.installDate)}</div>
+      </div>` : ''}
+      ${s.initialInstallDate ? `
+      <div class="install install-initial">
+        <div>
+          <div class="lbl">موعد التركيب المبدئي</div>
+          <div class="note">سبت / اثنين / أربعاء — الأولوية لليوم السابق</div>
+        </div>
+        <div class="date">${escapeHtml(s.initialInstallDay || '')} · ${escapeHtml(s.initialInstallDate)}</div>
       </div>` : ''}
 
       <div class="message-box">
