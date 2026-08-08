@@ -1,192 +1,459 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-  <title>Fonon Hawwa - Calculate Install Date</title>
+  <title>نظام حساب الإجازات والمواعيد</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Bootstrap -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="style.css">
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
 </head>
+<body>
+  <div class="app-shell">
+    <header class="app-header sticky-top">
+      <div class="container-fluid px-3 px-lg-4">
+        <div class="header-top">
+          <div class="brand-block">
+            <h1 class="app-title mb-0">نظام حساب الإجازات والمواعيد</h1>
+            <p id="header-subtitle" class="app-subtitle mb-0">الإجازات الرسمية — إدارة العطل وحساب أيام العمل</p>
+          </div>
 
-<body class="bg-light">
+          <div class="header-toolbar">
+            <div class="toolbar-group toolbar-always">
+              <select id="year-select" class="form-select form-select-sm year-select" aria-label="السنة"></select>
+              <button type="button" class="btn btn-sm btn-date-calc" id="btn-open-date-calc" title="حاسبة التواريخ">
+                <i class="fa-solid fa-calculator"></i>
+                <span class="btn-label">حاسبة التواريخ</span>
+              </button>
+            </div>
 
-  <!-- Header -->
-  <header class="py-3 text-center bg-dark text-white shadow-sm">
-    <h1 class="fw-bold mb-0">Fonon Hawwa</h1>
-    <p class="mb-0 small opacity-75">Calculate Install Date</p>
-  </header>
+            <div class="toolbar-group toolbar-holidays" id="toolbar-holidays">
+              <button type="button" class="btn btn-sm btn-fill-years" id="btn-fill-years" title="ملء كل السنوات">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span class="btn-label">ملء 2020–2035</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-export-year" id="btn-export-year">
+                <i class="fa-solid fa-file-export"></i>
+                <span class="btn-label">تصدير <span id="export-year-label">2026</span></span>
+              </button>
+              <button type="button" class="btn btn-sm btn-export-all" id="btn-export-all">
+                <i class="fa-solid fa-file-excel"></i>
+                <span class="btn-label">تصدير الكل</span>
+              </button>
+              <label for="importExcel" class="btn btn-sm btn-import mb-0">
+                <i class="fa-solid fa-upload"></i>
+                <span class="btn-label">استيراد</span>
+              </label>
+              <input type="file" id="importExcel" accept=".xlsx,.xls,.csv" class="d-none">
+              <button type="button" class="btn btn-sm btn-add-holiday" id="btn-add-holiday">
+                <i class="fa-solid fa-plus"></i>
+                <span class="btn-label">إضافة إجازة</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-refresh-official" id="btn-refresh-official" title="تحديث التفاصيل الرسمية">
+                <i class="fa-solid fa-rotate"></i>
+                <span class="btn-label">تحديث رسمي</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-dedupe" id="btn-dedupe" title="حذف التكرار">
+                <i class="fa-solid fa-clone"></i>
+                <span class="btn-label">حذف التكرار</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
-  <main class="container my-4">
-
-    <!-- Calculate Difference -->
-    <section class="card shadow-sm mb-4">
-      <div class="card-header bg-dark text-white fw-bold">
-        <i class="fa-solid fa-calendar-day me-2"></i>Calculate Date Difference
+        <div class="app-tabs" role="tablist">
+          <button type="button" class="app-tab active" data-tab="holidays" role="tab" aria-selected="true">
+            <i class="fa-regular fa-calendar"></i>
+            الإجازات الرسمية
+          </button>
+          <button type="button" class="app-tab" data-tab="delays" role="tab" aria-selected="false">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            حساب تأخيرات العقود
+          </button>
+        </div>
       </div>
-      <div class="card-body row g-2">
-        <div class="col-md-4"><input type="date" id="start-date-diff" class="form-control"></div>
-        <div class="col-md-4"><input type="date" id="end-date-diff" class="form-control"></div>
-        <div class="col-md-2"><input type="number" id="number-of-days-diff" class="form-control" placeholder="Duration" disabled></div>
-        <div class="col-md-2"><button class="btn btn-warning w-100" id="calculate-date-diff"><i class="fa-solid fa-calculator me-1"></i>Calc</button></div>
-      </div>
-    </section>
+    </header>
 
-    <!-- Calculate End Date -->
-    <section class="card shadow-sm mb-4">
-      <div class="card-header bg-dark text-white fw-bold">
-        <i class="fa-solid fa-calendar-check me-2"></i>Calculate Install Date
-      </div>
-      <div class="card-body row g-2">
-        <div class="col-md-4"><input type="date" id="start-date" class="form-control"></div>
-        <div class="col-md-4"><input type="number" id="number-of-days" class="form-control" placeholder="Duration"></div>
-        <div class="col-md-2"><input type="date" id="end-date" class="form-control" disabled></div>
-        <div class="col-md-2"><button class="btn btn-primary w-100" id="calculate-date"><i class="fa-solid fa-check me-1"></i>Calc</button></div>
-      </div>
-    </section>
-<!-- Skipped Days -->
-<section class="card shadow-sm mb-4">
-  <div class="card-header bg-dark text-white fw-bold">
-    <i class="fa-solid fa-calendar-xmark me-2"></i>Skipped Days
-    
+    <main class="container-fluid px-3 px-lg-4 py-3">
+      <!-- Holidays Tab -->
+      <section id="tab-holidays" class="tab-panel">
+        <div id="eid-alert" class="eid-alert d-none mb-3" role="status"></div>
+
+        <div class="kpi-row row g-3 mb-3">
+          <div class="col-6 col-lg">
+            <div class="kpi-card kpi-blue">
+              <div class="kpi-icon"><i class="fa-solid fa-calendar-days"></i></div>
+              <div>
+                <div class="kpi-label">إجمالي الإجازات</div>
+                <div class="kpi-value" id="kpi-total">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg">
+            <div class="kpi-card kpi-green">
+              <div class="kpi-icon"><i class="fa-solid fa-moon"></i></div>
+              <div>
+                <div class="kpi-label">دينية</div>
+                <div class="kpi-value" id="kpi-religious">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg">
+            <div class="kpi-card kpi-red">
+              <div class="kpi-icon"><i class="fa-solid fa-flag"></i></div>
+              <div>
+                <div class="kpi-label">وطنية</div>
+                <div class="kpi-value" id="kpi-national">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg">
+            <div class="kpi-card kpi-purple">
+              <div class="kpi-icon"><i class="fa-solid fa-calendar-week"></i></div>
+              <div>
+                <div class="kpi-label">أيام الجمعة</div>
+                <div class="kpi-value" id="kpi-fridays">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg">
+            <div class="kpi-card kpi-orange">
+              <div class="kpi-icon"><i class="fa-solid fa-briefcase"></i></div>
+              <div>
+                <div class="kpi-label">أيام العمل</div>
+                <div class="kpi-value" id="kpi-working">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <details class="holiday-rules-box mb-3" open>
+          <summary class="fw-bold">
+            <i class="fa-solid fa-circle-info"></i>
+            القواعد الأساسية للإجازات الرسمية
+          </summary>
+          <ul class="small mb-2 mt-2">
+            <li><strong>يوم التأسيس:</strong> 22 فبراير من كل عام.</li>
+            <li><strong>اليوم الوطني:</strong> 23 سبتمبر من كل عام.</li>
+            <li><strong>عيد الفطر / عيد الأضحى:</strong> تواريخ تقريبية حسب الرؤية الشرعية (قابلة للتعديل).</li>
+            <li><strong>عطلة نهاية الأسبوع:</strong> الجمعة فقط — السبت والأحد أيام عمل.</li>
+            <li><strong>أيام العمل:</strong> كل أيام السنة عدا الجمعة وتواريخ الإجازات الرسمية المسجّلة.</li>
+          </ul>
+          <div class="d-flex flex-column flex-md-row gap-2">
+            <div class="callout callout-green flex-fill">التعديلات اليدوية لها أولوية على التحديث التلقائي.</div>
+            <div class="callout callout-red flex-fill">تواريخ الأعياد الهجرية تقريبية — عدّلها يدوياً عند الإعلان الرسمي.</div>
+          </div>
+        </details>
+
+        <div class="row g-3">
+          <div class="col-lg-8">
+            <div class="panel-card">
+              <div class="panel-card-header d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0 fw-bold">تقويم الإجازات <span id="calendar-year-label">2026</span></h2>
+                <span class="panel-count" id="calendar-count">0</span>
+              </div>
+              <div class="panel-card-body" id="holiday-calendar-list">
+                <div class="empty-state">
+                  <i class="fa-regular fa-calendar-xmark"></i>
+                  <p>لا توجد إجازات لهذه السنة.</p>
+                  <button type="button" class="btn btn-sm btn-fill-years" id="btn-fill-years-empty">ملء السنوات الرسمية</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="panel-card">
+              <div class="panel-card-header">
+                <h2 class="h6 mb-0 fw-bold">الإجازات القادمة</h2>
+              </div>
+              <div class="panel-card-body" id="upcoming-holidays">
+                <div class="empty-state">
+                  <i class="fa-solid fa-hourglass-half"></i>
+                  <p>لا توجد إجازات قادمة.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Delays Tab -->
+      <section id="tab-delays" class="tab-panel d-none">
+        <div class="delay-layout">
+          <div class="contract-delay-banner mb-3">
+            <div class="d-flex align-items-start gap-3">
+              <div class="contract-delay-banner-icon flex-shrink-0">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <h2 class="h5 fw-bold mb-1">حساب تأخيرات العقود</h2>
+                <p class="mb-0 small">الفرق بالأيام التقويمية من تاريخ العقد، ثم خصم أيام السماح حسب مدة العقد</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="short-contract-warning" class="alert-short d-none mb-3" role="alert">
+            <i class="fa-solid fa-ban"></i>
+            <div>
+              <strong>عقد قصير — لا أيام سماح</strong>
+              <div class="small">للعقود ≤ 30 يوم يكون سماح المندوب وسماح السداد = 0 (قاعدة خاصة إجبارية).</div>
+            </div>
+          </div>
+
+          <div class="card shadow-sm mb-3 contract-delay-card">
+            <div class="card-header fw-bold">
+              <i class="fa-solid fa-clipboard-list"></i> بيانات العقد
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="contract-date" class="form-label">
+                    <i class="fa-regular fa-calendar"></i> تاريخ العقد
+                  </label>
+                  <input type="date" id="contract-date" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="contract-duration" class="form-label">
+                    <i class="fa-solid fa-stopwatch"></i> مدة العقد (أيام)
+                  </label>
+                  <input type="number" id="contract-duration" class="form-control" min="1" step="1" placeholder="مثال: 70" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="actual-work-order-date" class="form-label">
+                    <i class="fa-solid fa-clipboard-check"></i> تاريخ رفع أمر الشغل الفعلي
+                  </label>
+                  <input type="date" id="actual-work-order-date" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="actual-payment-date" class="form-label">
+                    <i class="fa-solid fa-wallet"></i> تاريخ السداد النهائي الفعلي
+                  </label>
+                  <input type="date" id="actual-payment-date" class="form-control" required>
+                </div>
+              </div>
+              <button type="button" class="btn btn-contract-delay w-100 mt-3" id="calculate-contract-delay">
+                <i class="fa-solid fa-calculator"></i>
+                احسب التأخيرات
+              </button>
+            </div>
+          </div>
+
+          <details class="card shadow-sm mb-3 contract-delay-card" id="rules-details" open>
+            <summary class="card-header fw-bold rules-summary">
+              <span><i class="fa-solid fa-scale-balanced"></i> القواعد والتفاصيل</span>
+              <i class="fa-solid fa-chevron-down summary-chevron"></i>
+            </summary>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <h3 class="h6 fw-bold mb-2">أيام سماح المندوب (أمر الشغل)</h3>
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="text-muted small">القيمة المطبقة:</span>
+                    <span id="rep-grace-value" class="badge contract-grace-badge">—</span>
+                  </div>
+                  <ul class="list-unstyled small mb-0 contract-rules-list" id="rep-rules-list">
+                    <li data-rep-rule="ge60">≥ 60 يوم ← <strong>5</strong> أيام</li>
+                    <li data-rep-rule="50-59">50–59 يوم ← <strong>4</strong> أيام</li>
+                    <li data-rep-rule="35-49">35–49 يوم ← <strong>3</strong> أيام</li>
+                    <li data-rep-rule="31-34">31–34 يوم ← <strong>0</strong></li>
+                    <li data-rep-rule="le30" class="rule-special">قاعدة خاصة: ≤ 30 يوم ← <strong>0</strong></li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <h3 class="h6 fw-bold mb-2">سماح السداد</h3>
+                  <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span class="text-muted small">القيمة المطبقة:</span>
+                    <span id="pay-grace-value" class="badge contract-grace-badge">—</span>
+                    <span id="pay-grace-mode-label" class="badge bg-secondary">—</span>
+                  </div>
+                  <div id="pay-grace-choice" class="mb-2 d-none">
+                    <div class="small text-muted mb-1">اختر سماح السداد لهذا العقد:</div>
+                    <div class="btn-group w-100" role="group" aria-label="اختيار سماح السداد">
+                      <input type="radio" class="btn-check" name="pay-grace-option" id="pay-grace-21" value="21" checked>
+                      <label class="btn btn-outline-secondary" for="pay-grace-21">21 يوم</label>
+                      <input type="radio" class="btn-check" name="pay-grace-option" id="pay-grace-3" value="3">
+                      <label class="btn btn-outline-secondary" for="pay-grace-3">3 أيام</label>
+                    </div>
+                  </div>
+                  <ul class="list-unstyled small mb-0 contract-rules-list" id="pay-rules-list">
+                    <li data-pay-rule="ge45">≥ 45 يوم ← <strong>21</strong> يوم (تلقائي)</li>
+                    <li data-pay-rule="31-44">31–44 يوم ← اختيار <strong>21</strong> أو <strong>3</strong></li>
+                    <li data-pay-rule="le30" class="rule-special">إجباري: ≤ 30 يوم ← <strong>0</strong></li>
+                  </ul>
+                </div>
+                <div class="col-12">
+                  <div class="contract-calc-note small mb-0">
+                    <strong>طريقة الحساب:</strong>
+                    التأخير = (الأيام التقويمية من تاريخ العقد حتى التاريخ الفعلي) − أيام السماح.
+                    يشمل الجمع والعطل الرسمية. موعد التركيب المقترح يظهر للعقود ≥ 35 يوم.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <div id="contract-delay-results" class="d-none results-block">
+            <div class="card shadow-sm mb-3 contract-delay-card">
+              <div class="card-header fw-bold">
+                <i class="fa-solid fa-chart-column"></i> النتائج
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div id="result-wo-card" class="result-status-card">
+                      <div class="result-card-label">رفع أمر الشغل</div>
+                      <div id="result-wo-elapsed" class="result-big-number">—</div>
+                      <div id="result-wo-sub" class="result-sub">—</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div id="result-pay-card" class="result-status-card">
+                      <div class="result-card-label">السداد النهائي</div>
+                      <div id="result-pay-elapsed" class="result-big-number">—</div>
+                      <div id="result-pay-sub" class="result-sub">—</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="install-suggestion-card" class="card shadow-sm mb-3 contract-delay-card install-card d-none">
+              <div class="card-header fw-bold">
+                <i class="fa-solid fa-screwdriver-wrench"></i> موعد التركيب المقترح
+              </div>
+              <div class="card-body text-center">
+                <div id="result-install-offset" class="install-big-number">—</div>
+                <div id="result-install-date" class="install-date">(—)</div>
+                <div id="result-install-note" class="small text-muted mt-1">—</div>
+              </div>
+            </div>
+
+            <div class="card shadow-sm mb-3 contract-delay-card">
+              <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="fa-regular fa-file-lines"></i> الرسالة الجاهزة</span>
+                <button type="button" class="btn btn-sm btn-copy-msg" id="btn-copy-message">
+                  <i class="fa-regular fa-copy"></i> نسخ
+                </button>
+              </div>
+              <div class="card-body">
+                <pre id="ready-message" class="ready-message mb-0"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
-  <div class="card-body text-center">
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="exportSkippedPDF">
-        <i class="fa-solid fa-file-pdf"></i> Export PDF
-      </button>
-    <!-- </div> -->
-    <button class="btn btn-outline-info" id="view-skipped" data-bs-toggle="modal" data-bs-target="#skippedModal">
-      <i class="fa-solid fa-eye me-1"></i> View Skipped Days
-    </button>
-  </div>
-</div>
-  </section>
 
-<!-- Skipped Modal
-<div class="modal fade" id="skippedModal" tabindex="-1" aria-labelledby="skippedModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title" id="skippedModalLabel">Skipped Days Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <table class="table table-striped text-center">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Reason</th>
-            </tr>
-          </thead>
-          <tbody id="skippedTableBody"></tbody>
-        </table>
+  <!-- Add / Edit Holiday Modal -->
+  <div class="modal fade" id="holidayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" dir="rtl">
+        <div class="modal-header">
+          <h5 class="modal-title" id="holidayModalTitle">إضافة إجازة</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="holiday-edit-id">
+          <div class="mb-3">
+            <label for="holiday-name" class="form-label">الاسم</label>
+            <input type="text" id="holiday-name" class="form-control" placeholder="مثال: اليوم الوطني">
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="holiday-start" class="form-label">تاريخ البداية</label>
+              <input type="date" id="holiday-start" class="form-control">
+            </div>
+            <div class="col-6">
+              <label for="holiday-end" class="form-label">تاريخ النهاية</label>
+              <input type="date" id="holiday-end" class="form-control">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="holiday-type" class="form-label">النوع</label>
+            <select id="holiday-type" class="form-select">
+              <option value="national">وطني</option>
+              <option value="religious">ديني</option>
+              <option value="international">دولي</option>
+            </select>
+          </div>
+          <div class="mb-0">
+            <label for="holiday-notes" class="form-label">ملاحظات</label>
+            <textarea id="holiday-notes" class="form-control" rows="3" placeholder="اختياري"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn btn-save-holiday" id="btn-save-holiday">حفظ</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<div class="card shadow-sm mb-4">
-  <div class="card-header bg-primary text-white">Vacations Tree View</div>
-  <div class="card-body" id="vacationsTree"></div>
-</div> -->
-<!-- Skipped Modal -->
-<div class="modal fade" id="skippedModal" tabindex="-1" aria-labelledby="skippedModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title" id="skippedModalLabel">Skipped Days Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Reason</th>
-            </tr>
-          </thead>
-          <tbody id="skippedTableBody"></tbody>
-        </table>
-      </div>
-      <div class="modal-footer">
-        <!-- زرار التصدير إلى PDF -->
-        <!-- <button id="exportSkippedPDF" class="btn btn-danger"> -->
-          <!-- <i class="fa-solid fa-file-pdf"></i> Export as PDF -->
-        </button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+  <!-- Date Calculator Modal -->
+  <div class="modal fade" id="dateCalcModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" dir="rtl">
+        <div class="modal-header">
+          <h5 class="modal-title">حساب تاريخ الانتهاء والأيام المستثناة</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+        </div>
+        <div class="modal-body">
+          <div class="date-calc-modes mb-3" role="tablist">
+            <button type="button" class="date-calc-mode active" data-mode="working">
+              <i class="fa-solid fa-briefcase"></i>
+              أيام عمل
+              <small>بدون جمعة وإجازات</small>
+            </button>
+            <button type="button" class="date-calc-mode" data-mode="calendar">
+              <i class="fa-regular fa-calendar"></i>
+              حساب عادي
+              <small>أيام تقويمية</small>
+            </button>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="calc-start-date" class="form-label">تاريخ البداية</label>
+              <input type="date" id="calc-start-date" class="form-control">
+            </div>
+            <div class="col-6">
+              <label for="calc-duration" class="form-label" id="calc-duration-label">عدد أيام العمل</label>
+              <input type="number" id="calc-duration" class="form-control" min="1" placeholder="مثال: 30">
+            </div>
+          </div>
+          <div id="calc-result" class="d-none">
+            <div class="calc-result-box mb-2">
+              <div class="small text-muted">تاريخ الانتهاء</div>
+              <div id="calc-end-date" class="fw-bold fs-5">—</div>
+              <div id="calc-skipped-count" class="small text-muted mt-1"></div>
+            </div>
+            <div id="calc-skipped-wrap" class="d-none">
+              <div class="small fw-semibold mb-1">الأيام المستثناة</div>
+              <ul id="calc-skipped-list" class="list-group list-group-flush small calc-skipped-list"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-date-calc-submit w-100" id="btn-run-date-calc">
+            <i class="fa-solid fa-calculator"></i> احسب التاريخ
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-
-    <!-- Vacations List -->
-    <section class="card shadow-sm mb-4">
-      <div class="card-header bg-dark text-white fw-bold">
-        <i class="fa-solid fa-list me-2"></i>Vacations List
-      </div>
-      <div class="card-body">
-
-        <!-- Export / Import -->
-        <div class="d-flex gap-2 mb-3 flex-wrap">
-          <button class="btn btn-success flex-fill" id="exportExcel"><i class="fa-solid fa-file-export me-1"></i>Export</button>
-          <label for="importExcel" class="btn btn-info flex-fill text-white"><i class="fa-solid fa-file-import me-1"></i>Import</label>
-          <input type="file" id="importExcel" accept=".xlsx, .xls" class="d-none">
-        </div>
-
-        <!-- Add Holiday -->
-        <div class="row g-2 mb-3">
-          <div class="col-md-4"><input type="date" id="addDate" class="form-control"></div>
-          <div class="col-md-6"><input type="text" id="addReason" class="form-control" placeholder="Reason"></div>
-          <div class="col-md-2"><button class="btn btn-primary w-100" id="add-holiday-btn"><i class="fa-solid fa-plus me-1"></i>Add</button></div>
-        </div>
-
-        <!-- Table -->
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover align-middle text-center">
-            <thead class="table-dark">
-              <tr>
-                <th>Reason</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="holidays-tbody"></tbody>
-          </table>
-        </div>
-
-      </div>
-    </section>
-  </main>
-
-  <!-- Toast موحد -->
-  <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055">
-    <div id="skippedToast" class="toast align-items-center text-bg-dark border-0 shadow-lg" role="alert">
-      <div class="d-flex align-items-center">
-        <div class="toast-body" id="skippedToastBody">
-          Calculation done!
-        </div>
-        <button type="button" class="btn btn-primary btn-sm ms-3 me-2" id="viewSkippedBtn">
-          <i class="fa-solid fa-eye"></i> View Details
-        </button>
-        <button type="button" class="btn-close btn-close-white m-auto" data-bs-dismiss="toast"></button>
+  <div class="position-fixed top-0 start-50 translate-middle-x p-3 toast-wrap">
+    <div id="appToast" class="toast align-items-center text-bg-dark border-0 shadow" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="appToastBody">تم</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     </div>
   </div>
-  
-  
 
-  <!-- Bootstrap & Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="script.js"></script>
