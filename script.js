@@ -701,23 +701,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const buildReadyMessage = ({
     contractDate, duration, payElapsed, payPenalty, payGrace, paymentIso,
-    woElapsed, woPenalty, repGrace
+    woElapsed, woPenalty, repGrace, woIso
   }) => {
     const contractIso = formatLocalDate(contractDate);
-    const woLine = woPenalty > 0
-      ? `أمر الشغل: فرق ${formatElapsedLabel(woElapsed)} — تأخير ${arabicDays(woPenalty)} بعد سماح ${arabicDays(repGrace)}.`
-      : `أمر الشغل: فرق ${formatElapsedLabel(woElapsed)} — ضمن السماح (${arabicDays(repGrace)}).`;
-    const lines = [
-      `يوجد فرق ${formatElapsedLabel(payElapsed)} للسداد النهائي من تاريخ العقد.`,
+    const sep = '====================================================';
+
+    const woDelayLine = woPenalty > 0
+      ? `التأخير ${formatElapsedLabel(woPenalty)} (بعد خصم ${arabicDays(repGrace)} السماح) للاعتماد النهائي`
+      : `لا تأخير (ضمن فترة السماح ${arabicDays(repGrace)}) للاعتماد النهائي`;
+
+    const payDelayLine = payPenalty > 0
+      ? `${formatElapsedLabel(payPenalty)} (بعد خصم ${arabicDays(payGrace)} السماح) للسداد الكامل ، مدة العقد ${duration} يوم`
+      : `لا تأخير (ضمن فترة السماح ${arabicDays(payGrace)}) للسداد الكامل ، مدة العقد ${duration} يوم`;
+
+    return [
+      `يوجد فرق ${formatElapsedLabel(woElapsed)} لرفع امر الشغل واعتماد المقاسات النهائية من تاريخ العقد`,
+      '',
+      `من ${contractIso} الى ${woIso}`,
+      '',
+      sep,
+      '',
+      `يوجد فرق ${formatElapsedLabel(payElapsed)} لسداد الدفعة النهائية من تاريخ العقد`,
+      '',
       `من ${contractIso} الى ${paymentIso}`,
-      woLine,
-      '===',
-      payPenalty > 0
-        ? `التأخير: ${arabicDays(payPenalty)} (بعد خصم ${arabicDays(payGrace)} السماح) للسداد الكامل، مدة العقد ${duration} يوم.`
-        : `لا تأخير في السداد بعد خصم السماح (${arabicDays(payGrace)})، مدة العقد ${duration} يوم.`,
+      '',
+      sep,
+      '',
+      woDelayLine,
+      '',
+      payDelayLine,
+      '',
       'لم يتم احتساب كامل التأخيرات على العميل'
-    ];
-    return lines.join('\n');
+    ].join('\n');
   };
 
   const clearFieldErrors = () => {
@@ -794,7 +809,8 @@ document.addEventListener('DOMContentLoaded', () => {
       paymentIso: formatLocalDate(actualPay),
       woElapsed,
       woPenalty: wo.penalty,
-      repGrace
+      repGrace,
+      woIso: formatLocalDate(actualWO)
     });
     readyMessageEl.textContent = lastReadyMessage;
 
