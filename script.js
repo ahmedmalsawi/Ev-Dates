@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerSubtitle = document.getElementById('header-subtitle');
   const tabHolidays = document.getElementById('tab-holidays');
   const tabDelays = document.getElementById('tab-delays');
+  const tabSettings = document.getElementById('tab-settings');
   const holidayCalendarList = document.getElementById('holiday-calendar-list');
   const upcomingHolidaysEl = document.getElementById('upcoming-holidays');
   const appToastEl = document.getElementById('appToast');
@@ -33,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let holidays = [];
   let selectedYear = new Date().getFullYear();
   if (selectedYear < YEAR_START || selectedYear > YEAR_END) selectedYear = 2026;
-  let dateCalcMode = 'working';
+  let dateCalcMode = 'calendar';
   let holidayModal = null;
   let dateCalcModal = null;
   let lastReadyMessage = '';
@@ -360,9 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="empty-state">
           <i class="fa-regular fa-calendar-xmark"></i>
           <p>لا توجد إجازات لهذه السنة.</p>
-          <button type="button" class="btn btn-sm btn-fill-years" id="btn-fill-years-empty">ملء السنوات الرسمية</button>
+          <button type="button" class="btn btn-sm btn-fill-years" id="btn-fill-years-empty">الذهاب للإعدادات</button>
         </div>`;
-      document.getElementById('btn-fill-years-empty')?.addEventListener('click', fillAllYears);
+      document.getElementById('btn-fill-years-empty')?.addEventListener('click', () => switchTab('settings'));
       return;
     }
     holidayCalendarList.innerHTML = list.map(h => {
@@ -846,64 +847,79 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.date-calc-mode').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.mode === mode);
     });
-    document.getElementById('calc-duration-label').textContent =
-      mode === 'working' ? 'عدد أيام العمل' : 'عدد الأيام التقويمية';
+    const label = document.getElementById('calc-result-label');
+    if (label) {
+      label.textContent = mode === 'working' ? 'عدد أيام العمل' : 'عدد الأيام التقويمية';
+    }
+    const fromVal = document.getElementById('calc-from-date')?.value;
+    const toVal = document.getElementById('calc-to-date')?.value;
+    if (fromVal && toVal) runDateCalc();
+  };
+
+  /** Count working days after `from` through `to` inclusive; collect skipped Fridays/holidays. */
+  const countWorkingDaysInRange = (fromDate, toDate) => {
+    const holidaySet = allHolidayDateSet();
+    const skipped = [];
+    let working = 0;
+    if (toDate <= fromDate) return { working: 0, skipped };
+    const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+    while (cursor < toDate) {
+      cursor.setDate(cursor.getDate() + 1);
+      const iso = formatLocalDate(cursor);
+      if (cursor.getDay() === 5) {
+        skipped.push({ date: iso, reason: 'جمعة' });
+      } else if (holidaySet.has(iso)) {
+        const h = holidays.find(x => expandHolidayDates(x).includes(iso));
+        skipped.push({ date: iso, reason: h?.name || 'إجازة' });
+      } else {
+        working++;
+      }
+    }
+    return { working, skipped };
   };
 
   const runDateCalc = () => {
-    const startVal = document.getElementById('calc-start-date').value;
-    const durationVal = document.getElementById('calc-duration').value;
-    if (!startVal || !durationVal) {
-      showToast('⚠ يرجى تعبئة تاريخ البداية والمدة', 'danger');
-      return;
-    }
-    let remaining = parseInt(durationVal, 10);
-    if (isNaN(remaining) || remaining < 1) {
-      showToast('⚠ المدة غير صحيحة', 'danger');
+    const fromVal = document.getElementById('calc-from-date').value;
+    const toVal = document.getElementById('calc-to-date').value;
+    if (!fromVal || !toVal) {
+      showToast('⚠ يرجى تعبئة من تاريخ وإلى تاريخ', 'danger');
       return;
     }
 
-    const start = parseLocalDate(startVal);
-    let end = new Date(start);
-    const skipped = [];
-    const holidaySet = allHolidayDateSet();
-
-    if (dateCalcMode === 'calendar') {
-      end = addCalendarDays(start, remaining - 1);
-    } else {
-      remaining--; // start counts as day 1
-      while (remaining > 0) {
-        end = addCalendarDays(end, 1);
-        const iso = formatLocalDate(end);
-        if (end.getDay() === 5) {
-          skipped.push({ date: iso, reason: 'جمعة' });
-        } else if (holidaySet.has(iso)) {
-          const h = holidays.find(x => expandHolidayDates(x).includes(iso));
-          skipped.push({ date: iso, reason: h?.name || 'إجازة' });
-        } else {
-          remaining--;
-        }
-      }
+    const fromDate = parseLocalDate(fromVal);
+    const toDate = parseLocalDate(toVal);
+    if (toDate < fromDate) {
+      showToast('⚠ تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو يساويه', 'danger');
+      return;
     }
 
     document.getElementById('calc-result').classList.remove('d-none');
-    document.getElementById('calc-end-date').textContent = formatLocalDate(end);
+    const resultEl = document.getElementById('calc-days-result');
     const skippedCountEl = document.getElementById('calc-skipped-count');
     const wrap = document.getElementById('calc-skipped-wrap');
     const list = document.getElementById('calc-skipped-list');
-    if (dateCalcMode === 'working') {
+
+    if (dateCalcMode === 'calendar') {
+      const days = calendarDaysBetween(fromDate, toDate);
+      if (resultEl) resultEl.textContent = arabicDays(days);
+      if (skippedCountEl) skippedCountEl.textContent = 'حساب تقويمي (يشمل الجمع والإجازات)';
+      wrap?.classList.add('d-none');
+      if (list) list.innerHTML = '';
+    } else {
+      const { working, skipped } = countWorkingDaysInRange(fromDate, toDate);
+      if (resultEl) resultEl.textContent = arabicDays(working);
       if (skippedCountEl) skippedCountEl.textContent = `تم استثناء ${arabicDays(skipped.length)}`;
       if (skipped.length) {
-        wrap.classList.remove('d-none');
-        list.innerHTML = skipped.map(s => `<li class="list-group-item">${s.date} — ${escapeHtml(s.reason)}</li>`).join('');
+        wrap?.classList.remove('d-none');
+        if (list) {
+          list.innerHTML = skipped
+            .map(s => `<li class="list-group-item">${s.date} — ${escapeHtml(s.reason)}</li>`)
+            .join('');
+        }
       } else {
-        wrap.classList.add('d-none');
-        list.innerHTML = '';
+        wrap?.classList.add('d-none');
+        if (list) list.innerHTML = '';
       }
-    } else {
-      if (skippedCountEl) skippedCountEl.textContent = 'حساب تقويمي (بدون استثناءات)';
-      wrap.classList.add('d-none');
-      list.innerHTML = '';
     }
   };
 
@@ -914,13 +930,19 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.toggle('active', active);
       btn.setAttribute('aria-selected', active ? 'true' : 'false');
     });
-    tabHolidays.classList.toggle('d-none', tab !== 'holidays');
-    tabDelays.classList.toggle('d-none', tab !== 'delays');
-    document.getElementById('toolbar-holidays')?.classList.toggle('d-none', tab !== 'holidays');
+    tabHolidays?.classList.toggle('d-none', tab !== 'holidays');
+    tabDelays?.classList.toggle('d-none', tab !== 'delays');
+    tabSettings?.classList.toggle('d-none', tab !== 'settings');
+    document.querySelectorAll('.toolbar-holidays-only').forEach(el => {
+      el.classList.toggle('d-none', tab !== 'holidays');
+    });
     if (headerSubtitle) {
-      headerSubtitle.textContent = tab === 'holidays'
-        ? 'الإجازات الرسمية — إدارة العطل وحساب أيام العمل'
-        : 'حساب تأخيرات العقود — السماح والعقوبات وموعد التركيب';
+      const subtitles = {
+        holidays: 'عرض الإجازات ومؤشرات أيام العمل حسب السنة',
+        delays: 'أدخل بيانات العقد ثم احسب التأخير والرسالة الجاهزة',
+        settings: 'إدارة البيانات والاستيراد والتصدير والقواعد'
+      };
+      headerSubtitle.textContent = subtitles[tab] || '';
     }
   };
 
@@ -1006,5 +1028,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initYearSelect();
   refreshHolidayViews();
   updateGraceUI();
-  setDateCalcMode('working');
+  setDateCalcMode('calendar');
 });
