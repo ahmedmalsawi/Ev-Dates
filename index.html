@@ -110,6 +110,15 @@
                 </div>
                 <span class="panel-count" id="calendar-count">0</span>
               </div>
+              <div class="holiday-filters">
+                <input type="search" id="holiday-search" class="form-control form-control-sm" placeholder="بحث بالاسم...">
+                <select id="holiday-type-filter" class="form-select form-select-sm" aria-label="تصفية النوع">
+                  <option value="all">كل الأنواع</option>
+                  <option value="religious">ديني</option>
+                  <option value="national">وطني</option>
+                  <option value="international">دولي</option>
+                </select>
+              </div>
               <div class="panel-card-body" id="holiday-calendar-list">
                 <div class="empty-state">
                   <i class="fa-regular fa-calendar-xmark"></i>
@@ -250,12 +259,30 @@
               <div class="surface-card">
                 <div class="surface-card-header between">
                   <span><i class="fa-regular fa-file-lines"></i> الرسالة الجاهزة</span>
-                  <button type="button" class="btn btn-sm btn-copy-msg" id="btn-copy-message">
-                    <i class="fa-regular fa-copy"></i> نسخ
-                  </button>
+                  <div class="result-actions">
+                    <button type="button" class="btn btn-sm btn-pdf-report" id="btn-export-pdf">
+                      <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                    <button type="button" class="btn btn-sm btn-copy-msg" id="btn-copy-message">
+                      <i class="fa-regular fa-copy"></i> نسخ
+                    </button>
+                  </div>
                 </div>
                 <div class="surface-card-body">
                   <pre id="ready-message" class="ready-message mb-0"></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- History -->
+            <div class="surface-card">
+              <div class="surface-card-header between">
+                <span><i class="fa-solid fa-clock-rotate-left"></i> سجل الحسابات</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-history">مسح الكل</button>
+              </div>
+              <div class="surface-card-body">
+                <div id="calc-history-list" class="history-list">
+                  <p class="text-muted small mb-0" id="calc-history-empty">لا يوجد سجل بعد. نفّذ حساباً ليظهر هنا.</p>
                 </div>
               </div>
             </div>
@@ -311,6 +338,39 @@
             </div>
 
             <div class="settings-grid">
+              <div class="settings-card settings-card-wide">
+                <div class="settings-card-header">
+                  <i class="fa-solid fa-building"></i>
+                  <div>
+                    <h3 class="h6 mb-0 fw-bold">هوية الشركة</h3>
+                    <p class="small text-muted mb-0">تظهر في الرسالة الجاهزة وتقرير PDF</p>
+                  </div>
+                </div>
+                <div class="settings-card-body branding-fields">
+                  <div class="field">
+                    <label for="company-name">اسم الشركة</label>
+                    <input type="text" id="company-name" class="form-control" value="فنون حواء للمطابخ" placeholder="فنون حواء للمطابخ">
+                  </div>
+                  <div class="field">
+                    <label for="company-footer">سطر تذييل الرسائل</label>
+                    <input type="text" id="company-footer" class="form-control" value="قسم ادارة المواعيد" placeholder="قسم ادارة المواعيد">
+                  </div>
+                  <div class="field">
+                    <label for="company-logo">شعار الشركة</label>
+                    <div class="logo-row">
+                      <input type="file" id="company-logo" accept="image/*" class="form-control">
+                      <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-logo">استعادة الافتراضي</button>
+                    </div>
+                    <div id="company-logo-preview" class="logo-preview d-none">
+                      <img id="company-logo-img" alt="شعار الشركة">
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-save-holiday" id="btn-save-branding">
+                    <i class="fa-solid fa-floppy-disk"></i> حفظ الهوية
+                  </button>
+                </div>
+              </div>
+
               <div class="settings-card">
                 <div class="settings-card-header">
                   <i class="fa-solid fa-database"></i>
@@ -469,10 +529,19 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" dir="rtl">
         <div class="modal-header">
-          <h5 class="modal-title">حساب تاريخ الانتهاء والأيام المستثناة</h5>
+          <h5 class="modal-title">حاسبة التواريخ</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
         </div>
         <div class="modal-body">
+          <div class="date-calc-ops mb-3" role="tablist">
+            <button type="button" class="date-calc-op active" data-op="count">
+              من / إلى ← عدد الأيام
+            </button>
+            <button type="button" class="date-calc-op" data-op="end">
+              بداية + مدة ← تاريخ انتهاء
+            </button>
+          </div>
+
           <div class="date-calc-modes mb-3" role="tablist">
             <button type="button" class="date-calc-mode" data-mode="working">
               <i class="fa-solid fa-briefcase"></i>
@@ -483,7 +552,8 @@
               حساب عادي
             </button>
           </div>
-          <div class="row g-2 mb-3" dir="ltr">
+
+          <div id="calc-fields-count" class="row g-2 mb-3" dir="ltr">
             <div class="col-6">
               <label for="calc-from-date" class="form-label" dir="rtl">من تاريخ</label>
               <input type="date" id="calc-from-date" class="form-control">
@@ -493,6 +563,18 @@
               <input type="date" id="calc-to-date" class="form-control">
             </div>
           </div>
+
+          <div id="calc-fields-end" class="row g-2 mb-3 d-none">
+            <div class="col-6">
+              <label for="calc-start-date" class="form-label">تاريخ البداية</label>
+              <input type="date" id="calc-start-date" class="form-control">
+            </div>
+            <div class="col-6">
+              <label for="calc-duration" class="form-label" id="calc-duration-label">المدة (أيام)</label>
+              <input type="number" id="calc-duration" class="form-control" min="1" placeholder="مثال: 30">
+            </div>
+          </div>
+
           <div id="calc-result" class="d-none">
             <div class="calc-result-box mb-2">
               <div class="small text-muted" id="calc-result-label">عدد الأيام</div>
@@ -507,7 +589,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-date-calc-submit w-100" id="btn-run-date-calc">
-            <i class="fa-regular fa-clock"></i> احسب عدد الأيام
+            <i class="fa-regular fa-clock"></i> <span id="calc-submit-label">احسب عدد الأيام</span>
           </button>
         </div>
       </div>

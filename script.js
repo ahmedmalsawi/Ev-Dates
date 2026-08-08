@@ -1,8 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
   const STORAGE_KEY = 'holidays_v2';
   const LEGACY_KEY = 'holidays';
+  const HISTORY_KEY = 'calc_history_v1';
+  const BRANDING_KEY = 'branding_v1';
   const YEAR_START = 2020;
   const YEAR_END = 2035;
+  const HISTORY_LIMIT = 20;
+  const DEFAULT_BRANDING = {
+    companyName: 'فنون حواء للمطابخ',
+    footer: 'قسم ادارة المواعيد',
+    logoPath: 'assets/eves-arts-logo.png'
+  };
 
   /* ==================[ Elements ]================== */
   const yearSelect = document.getElementById('year-select');
@@ -32,12 +40,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const readyMessageEl = document.getElementById('ready-message');
 
   let holidays = [];
+  let calcHistory = [];
+  let branding = {
+    companyName: DEFAULT_BRANDING.companyName,
+    footer: DEFAULT_BRANDING.footer,
+    logoDataUrl: ''
+  };
+
+  const defaultLogoSrc = () => {
+    try {
+      return new URL(DEFAULT_BRANDING.logoPath, window.location.href).href;
+    } catch {
+      return DEFAULT_BRANDING.logoPath;
+    }
+  };
+
+  const getLogoSrc = () => branding.logoDataUrl || defaultLogoSrc();
+
+  const applyLogoPreview = () => {
+    const preview = document.getElementById('company-logo-preview');
+    const img = document.getElementById('company-logo-img');
+    if (!img || !preview) return;
+    img.src = getLogoSrc();
+    preview.classList.remove('d-none');
+  };
   let selectedYear = new Date().getFullYear();
   if (selectedYear < YEAR_START || selectedYear > YEAR_END) selectedYear = 2026;
   let dateCalcMode = 'calendar';
+  let dateCalcOp = 'count'; // count | end
   let holidayModal = null;
   let dateCalcModal = null;
   let lastReadyMessage = '';
+  let lastCalcSnapshot = null;
 
   /* ==================[ Seed data: approximate Islamic + national ]================== */
   // Eid Al-Fitr start (approx), Eid Al-Adha start (approx) — editable via UI
@@ -351,12 +385,46 @@ document.addEventListener('DOMContentLoaded', () => {
     alertEl.innerHTML = `<i class="fa-solid fa-moon"></i><div>تنبيه عيد قريب (تحقق من الإعلان الرسمي): ${items}</div>`;
   };
 
+  const holidayItemHtml = (h) => {
+    const same = h.startDate === h.endDate;
+    const dateLabel = same
+      ? formatDateAr(h.startDate)
+      : `${formatDateAr(h.startDate)} — ${formatDateAr(h.endDate)}`;
+    const manualBadge = h.manual ? '<span class="type-pill" style="background:#ffedd5;color:#9a3412">يدوي</span>' : '';
+    return `
+      <div class="holiday-item">
+        <span class="dot dot-${h.type}"></span>
+        <div class="holiday-meta">
+          <div class="holiday-name">${escapeHtml(h.name)}</div>
+          <div class="holiday-dates">${dateLabel}</div>
+          ${h.notes ? `<div class="holiday-notes">${escapeHtml(h.notes)}</div>` : ''}
+        </div>
+        <div>
+          <span class="type-pill">${TYPE_LABEL[h.type] || h.type}</span>
+          ${manualBadge}
+        </div>
+        <div class="holiday-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-edit="${h.id}" title="تعديل" aria-label="تعديل">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-delete="${h.id}" title="حذف" aria-label="حذف">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>`;
+  };
+
   const renderHolidayCalendar = () => {
-    const list = holidaysForYear(selectedYear);
+    const search = (document.getElementById('holiday-search')?.value || '').trim().toLowerCase();
+    const typeFilter = document.getElementById('holiday-type-filter')?.value || 'all';
+    let list = holidaysForYear(selectedYear);
+    if (typeFilter !== 'all') list = list.filter(h => h.type === typeFilter);
+    if (search) list = list.filter(h => h.name.toLowerCase().includes(search) || (h.notes || '').toLowerCase().includes(search));
+
     const countEl = document.getElementById('calendar-count');
     if (countEl) countEl.textContent = String(list.length);
 
-    if (!list.length) {
+    if (!holidaysForYear(selectedYear).length) {
       holidayCalendarList.innerHTML = `
         <div class="empty-state">
           <i class="fa-regular fa-calendar-xmark"></i>
@@ -366,34 +434,27 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btn-fill-years-empty')?.addEventListener('click', () => switchTab('settings'));
       return;
     }
-    holidayCalendarList.innerHTML = list.map(h => {
-      const same = h.startDate === h.endDate;
-      const dateLabel = same
-        ? formatDateAr(h.startDate)
-        : `${formatDateAr(h.startDate)} — ${formatDateAr(h.endDate)}`;
-      const manualBadge = h.manual ? '<span class="type-pill" style="background:#ffedd5;color:#9a3412">يدوي</span>' : '';
-      return `
-        <div class="holiday-item">
-          <span class="dot dot-${h.type}"></span>
-          <div class="holiday-meta">
-            <div class="holiday-name">${escapeHtml(h.name)}</div>
-            <div class="holiday-dates">${dateLabel}</div>
-            ${h.notes ? `<div class="holiday-notes">${escapeHtml(h.notes)}</div>` : ''}
-          </div>
-          <div>
-            <span class="type-pill">${TYPE_LABEL[h.type] || h.type}</span>
-            ${manualBadge}
-          </div>
-          <div class="holiday-actions">
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-edit="${h.id}" title="تعديل" aria-label="تعديل">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-danger" data-delete="${h.id}" title="حذف" aria-label="حذف">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>`;
-    }).join('');
+
+    if (!list.length) {
+      holidayCalendarList.innerHTML = `<div class="empty-state"><i class="fa-solid fa-filter"></i><p>لا نتائج مطابقة للبحث/التصفية.</p></div>`;
+      return;
+    }
+
+    const byMonth = {};
+    list.forEach(h => {
+      const m = parseLocalDate(h.startDate).getMonth();
+      if (!byMonth[m]) byMonth[m] = [];
+      byMonth[m].push(h);
+    });
+
+    holidayCalendarList.innerHTML = Object.keys(byMonth)
+      .sort((a, b) => Number(a) - Number(b))
+      .map(m => `
+        <div class="month-group">
+          <div class="month-group-title">${MONTH_AR[Number(m)]}</div>
+          ${byMonth[m].map(holidayItemHtml).join('')}
+        </div>`)
+      .join('');
   };
 
   const renderUpcoming = () => {
@@ -700,6 +761,48 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   };
 
+  const loadBranding = () => {
+    let stored = {};
+    try {
+      stored = JSON.parse(localStorage.getItem(BRANDING_KEY) || '{}') || {};
+    } catch {
+      stored = {};
+    }
+    branding = {
+      companyName: (stored.companyName || '').trim() || DEFAULT_BRANDING.companyName,
+      footer: (stored.footer || '').trim() || DEFAULT_BRANDING.footer,
+      logoDataUrl: stored.logoDataUrl || ''
+    };
+    // Seed defaults once if nothing was saved yet
+    if (!localStorage.getItem(BRANDING_KEY)) {
+      localStorage.setItem(BRANDING_KEY, JSON.stringify({
+        companyName: branding.companyName,
+        footer: branding.footer,
+        logoDataUrl: ''
+      }));
+    }
+    const nameEl = document.getElementById('company-name');
+    const footerEl = document.getElementById('company-footer');
+    if (nameEl) nameEl.value = branding.companyName;
+    if (footerEl) footerEl.value = branding.footer;
+    applyLogoPreview();
+  };
+
+  const saveBranding = () => {
+    branding = {
+      companyName: (document.getElementById('company-name')?.value || '').trim() || DEFAULT_BRANDING.companyName,
+      footer: (document.getElementById('company-footer')?.value || '').trim() || DEFAULT_BRANDING.footer,
+      logoDataUrl: branding.logoDataUrl || ''
+    };
+    localStorage.setItem(BRANDING_KEY, JSON.stringify(branding));
+    const nameEl = document.getElementById('company-name');
+    const footerEl = document.getElementById('company-footer');
+    if (nameEl) nameEl.value = branding.companyName;
+    if (footerEl) footerEl.value = branding.footer;
+    applyLogoPreview();
+    showToast('✅ تم حفظ هوية الشركة', 'success');
+  };
+
   const buildReadyMessage = ({
     contractDate, duration, payElapsed, payPenalty, payGrace, paymentIso,
     woElapsed, woPenalty, repGrace, woIso
@@ -715,7 +818,11 @@ document.addEventListener('DOMContentLoaded', () => {
       ? `${formatElapsedLabel(payPenalty)} (بعد خصم ${arabicDays(payGrace)} السماح) للسداد الكامل ، مدة العقد ${duration} يوم`
       : `لا تأخير (ضمن فترة السماح ${arabicDays(payGrace)}) للسداد الكامل ، مدة العقد ${duration} يوم`;
 
-    return [
+    const lines = [];
+    if (branding.companyName) {
+      lines.push(branding.companyName, '');
+    }
+    lines.push(
       `يوجد فرق ${formatElapsedLabel(woElapsed)} لرفع امر الشغل واعتماد المقاسات النهائية من تاريخ العقد`,
       '',
       `من ${contractIso} الى ${woIso}`,
@@ -733,7 +840,67 @@ document.addEventListener('DOMContentLoaded', () => {
       payDelayLine,
       '',
       'لم يتم احتساب كامل التأخيرات على العميل'
-    ].join('\n');
+    );
+    if (branding.footer) {
+      lines.push('', branding.footer);
+    }
+    return lines.join('\n');
+  };
+
+  const loadHistory = () => {
+    try {
+      calcHistory = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      if (!Array.isArray(calcHistory)) calcHistory = [];
+    } catch {
+      calcHistory = [];
+    }
+  };
+
+  const saveHistoryStore = () => localStorage.setItem(HISTORY_KEY, JSON.stringify(calcHistory));
+
+  const renderHistory = () => {
+    const listEl = document.getElementById('calc-history-list');
+    const emptyEl = document.getElementById('calc-history-empty');
+    if (!listEl) return;
+    if (!calcHistory.length) {
+      listEl.innerHTML = '<p class="text-muted small mb-0" id="calc-history-empty">لا يوجد سجل بعد. نفّذ حساباً ليظهر هنا.</p>';
+      return;
+    }
+    listEl.innerHTML = calcHistory.map(item => `
+      <div class="history-item" data-history-id="${item.id}">
+        <div class="history-meta">
+          <div class="fw-bold">${escapeHtml(item.contractDate)} · مدة ${item.duration} يوم</div>
+          <div class="small text-muted">أمر شغل: ${formatElapsedLabel(item.woElapsed)} | سداد: ${formatElapsedLabel(item.payElapsed)} · ${new Date(item.savedAt).toLocaleString('ar-SA')}</div>
+        </div>
+        <div class="history-actions">
+          <button type="button" class="btn btn-sm btn-outline-primary" data-history-load="${item.id}" title="إعادة فتح">فتح</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-history-copy="${item.id}" title="نسخ">نسخ</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-history-delete="${item.id}" title="حذف">حذف</button>
+        </div>
+      </div>`).join('');
+  };
+
+  const pushHistory = (entry) => {
+    calcHistory.unshift(entry);
+    if (calcHistory.length > HISTORY_LIMIT) calcHistory = calcHistory.slice(0, HISTORY_LIMIT);
+    saveHistoryStore();
+    renderHistory();
+  };
+
+  const loadHistoryEntry = (id) => {
+    const item = calcHistory.find(x => x.id === id);
+    if (!item) return;
+    if (contractDateInput) contractDateInput.value = item.contractDate;
+    if (contractDurationInput) contractDurationInput.value = String(item.duration);
+    if (actualWorkOrderInput) actualWorkOrderInput.value = item.woDate;
+    if (actualPaymentInput) actualPaymentInput.value = item.payDate;
+    if (item.payGraceChoice === 3 || item.payGraceChoice === 21) {
+      const radio = document.querySelector(`input[name="pay-grace-option"][value="${item.payGraceChoice}"]`);
+      if (radio) radio.checked = true;
+    }
+    updateGraceUI();
+    calculateContractDelays(false);
+    showToast('✅ تم تحميل الحساب من السجل', 'success');
   };
 
   const clearFieldErrors = () => {
@@ -743,7 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const markInvalid = (el) => el?.classList.add('is-invalid');
 
-  const calculateContractDelays = () => {
+  const calculateContractDelays = (saveToHistory = true) => {
     clearFieldErrors();
     const contractDateVal = contractDateInput?.value;
     const durationVal = contractDurationInput?.value;
@@ -815,10 +982,266 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     readyMessageEl.textContent = lastReadyMessage;
 
+    lastCalcSnapshot = {
+      contractDate: contractDateVal,
+      duration,
+      woDate: actualWOVal,
+      payDate: actualPayVal,
+      woElapsed,
+      payElapsed,
+      woPenalty: wo.penalty,
+      payPenalty: pay.penalty,
+      repGrace,
+      payGrace,
+      installDate: install ? formatLocalDate(install.date) : null,
+      message: lastReadyMessage
+    };
+
+    if (saveToHistory) {
+      pushHistory({
+        id: uid(),
+        savedAt: Date.now(),
+        contractDate: contractDateVal,
+        duration,
+        woDate: actualWOVal,
+        payDate: actualPayVal,
+        woElapsed,
+        payElapsed,
+        payGraceChoice: payGrace,
+        message: lastReadyMessage
+      });
+    }
+
     contractDelayResultsEl.classList.remove('d-none');
     updateGraceUI();
     showToast('✅ تم حساب التأخيرات بنجاح!', 'success');
     contractDelayResultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const exportDelayPdf = () => {
+    if (!lastReadyMessage || !lastCalcSnapshot) {
+      showToast('⚠ احسب التأخيرات أولاً', 'danger');
+      return;
+    }
+    const s = lastCalcSnapshot;
+    const company = branding.companyName || DEFAULT_BRANDING.companyName;
+    const dept = branding.footer || DEFAULT_BRANDING.footer;
+    const woOk = s.woPenalty <= 0;
+    const payOk = s.payPenalty <= 0;
+    const logoSrc = getLogoSrc();
+    const logoHtml = logoSrc
+      ? `<img class="logo" src="${logoSrc}" alt="${escapeHtml(company)}">`
+      : `<div class="logo-fallback"><span>EA</span></div>`;
+
+    const statusBadge = (ok) => ok
+      ? '<span class="badge ok">ضمن السماح</span>'
+      : '<span class="badge late">يوجد تأخير</span>';
+
+    const html = `<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(company)} — تقرير التأخيرات</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @page{ size:A4 portrait; margin:8mm; }
+    :root{
+      --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb; --bg:#f3f4f6;
+      --brand:#243028; --accent:#ea580c; --ok:#166534; --late:#9f1239;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0; padding:0; height:100%}
+    body{
+      font-family:Cairo,Tahoma,sans-serif; color:var(--ink);
+      background:var(--bg); -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      padding:12px;
+    }
+    .sheet{
+      width:100%; max-width:190mm;
+      margin:0 auto; background:#fff;
+      border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.08);
+      border:1px solid #e7e7e7; overflow:hidden;
+      display:flex; flex-direction:column;
+      transform-origin: top center;
+      page-break-inside:avoid; break-inside:avoid;
+    }
+    .topbar{height:5px; flex:0 0 auto; background:linear-gradient(90deg,var(--brand),var(--accent));}
+    .header{
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      padding:10px 16px; border-bottom:1px solid var(--line); flex:0 0 auto;
+    }
+    .header-text h1{margin:0; font-size:18px; font-weight:800; line-height:1.25}
+    .header-text p{margin:2px 0 0; color:var(--muted); font-size:11px; font-weight:600}
+    .logo{max-height:46px; max-width:120px; object-fit:contain}
+    .logo-fallback{
+      width:42px; height:42px; border-radius:10px; background:var(--brand); color:#fff;
+      display:grid; place-items:center; font-weight:800; font-size:13px;
+    }
+    .content{
+      padding:10px 16px 6px; flex:1 1 auto; min-height:0;
+      display:flex; flex-direction:column; gap:8px;
+    }
+    .section-title{
+      margin:0; font-size:12px; font-weight:800; color:var(--brand);
+      display:flex; align-items:center; gap:6px;
+    }
+    .section-title::before{
+      content:""; width:6px; height:6px; border-radius:50%; background:var(--accent);
+    }
+    .meta-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+    .meta-card{
+      background:#fafafa; border:1px solid var(--line); border-radius:10px; padding:7px 9px;
+    }
+    .meta-card .lbl{font-size:10px; color:var(--muted); font-weight:700; margin-bottom:2px}
+    .meta-card .val{font-size:13px; font-weight:800; line-height:1.2}
+    .status-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+    .status-card{
+      border-radius:10px; padding:9px 11px; border:1px solid transparent;
+    }
+    .status-card.ok{background:linear-gradient(180deg,#ecfdf5,#dcfce7); border-color:#86efac; color:var(--ok)}
+    .status-card.late{background:linear-gradient(180deg,#fff1f2,#ffe4e6); border-color:#fda4af; color:var(--late)}
+    .status-card h3{margin:0 0 4px; font-size:11px; font-weight:800; opacity:.95; line-height:1.35}
+    .status-card .big{font-size:20px; font-weight:800; line-height:1.1; margin:2px 0 4px}
+    .status-card .sub{font-size:11px; font-weight:600; line-height:1.35}
+    .badge{
+      display:inline-block; border-radius:999px; padding:1px 7px; font-size:9px; font-weight:800;
+      vertical-align:middle;
+    }
+    .badge.ok{background:#bbf7d0; color:#14532d}
+    .badge.late{background:#fecdd3; color:#881337}
+    .install{
+      background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1px solid #93c5fd;
+      border-radius:10px; padding:8px 12px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .install .lbl{font-size:11px; font-weight:800; color:#1d4ed8}
+    .install .date{font-size:16px; font-weight:800; color:#1e3a8a}
+    .install .note{font-size:10px; color:#1e40af; font-weight:600; margin-top:1px}
+    .message-box{
+      border:1px solid var(--line); border-radius:10px; overflow:hidden;
+      flex:1 1 auto; min-height:0; display:flex; flex-direction:column;
+    }
+    .message-box .mh{
+      background:#f8fafc; padding:6px 10px; border-bottom:1px solid var(--line);
+      font-size:11px; font-weight:800; color:var(--brand); flex:0 0 auto;
+    }
+    .message-box .mb{
+      padding:8px 10px; white-space:pre-wrap; font-size:11px; line-height:1.55; font-weight:600;
+      overflow:hidden; flex:1 1 auto;
+    }
+    .note-line{margin:0; color:var(--muted); font-size:10px; font-weight:700}
+    .footer{
+      padding:7px 16px 10px; display:flex; justify-content:space-between; align-items:center;
+      color:var(--muted); font-size:10px; font-weight:700; border-top:1px solid var(--line);
+      flex:0 0 auto;
+    }
+    @media print{
+      html,body{height:auto; background:#fff; padding:0}
+      .sheet{
+        max-width:none; width:100%;
+        box-shadow:none; border:none; border-radius:0;
+        page-break-after:avoid; page-break-inside:avoid;
+        break-inside:avoid;
+      }
+      .message-box .mb{font-size:10.5px; line-height:1.45}
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet" id="sheet">
+    <div class="topbar"></div>
+    <header class="header">
+      <div class="header-text">
+        <h1>${escapeHtml(company)}</h1>
+        <p>تقرير تأخيرات العقود · ${escapeHtml(dept)}</p>
+      </div>
+      ${logoHtml}
+    </header>
+
+    <div class="content">
+      <h2 class="section-title">ملخص العقد</h2>
+      <div class="meta-grid">
+        <div class="meta-card"><div class="lbl">تاريخ العقد</div><div class="val">${escapeHtml(s.contractDate)}</div></div>
+        <div class="meta-card"><div class="lbl">مدة العقد</div><div class="val">${s.duration} يوم</div></div>
+        <div class="meta-card"><div class="lbl">تاريخ أمر الشغل</div><div class="val">${escapeHtml(s.woDate)}</div></div>
+        <div class="meta-card"><div class="lbl">تاريخ السداد</div><div class="val">${escapeHtml(s.payDate)}</div></div>
+      </div>
+
+      <h2 class="section-title">نتائج التأخير</h2>
+      <div class="status-grid">
+        <div class="status-card ${woOk ? 'ok' : 'late'}">
+          <h3>أمر الشغل واعتماد المقاسات ${statusBadge(woOk)}</h3>
+          <div class="big">${formatElapsedLabel(s.woElapsed)}</div>
+          <div class="sub">${woOk
+            ? `ضمن فترة السماح (${arabicDays(s.repGrace)})`
+            : `التأخير: ${formatElapsedLabel(s.woPenalty)} بعد خصم ${arabicDays(s.repGrace)} السماح`}</div>
+        </div>
+        <div class="status-card ${payOk ? 'ok' : 'late'}">
+          <h3>السداد النهائي ${statusBadge(payOk)}</h3>
+          <div class="big">${formatElapsedLabel(s.payElapsed)}</div>
+          <div class="sub">${payOk
+            ? `ضمن فترة السماح (${arabicDays(s.payGrace)})`
+            : `التأخير: ${formatElapsedLabel(s.payPenalty)} بعد خصم ${arabicDays(s.payGrace)} السماح`}</div>
+        </div>
+      </div>
+
+      ${s.installDate ? `
+      <div class="install">
+        <div>
+          <div class="lbl">موعد التركيب المقترح</div>
+          <div class="note">محسوب حسب قواعد مدة العقد</div>
+        </div>
+        <div class="date">${escapeHtml(s.installDate)}</div>
+      </div>` : ''}
+
+      <div class="message-box">
+        <div class="mh">نص الرسالة الجاهزة</div>
+        <div class="mb">${escapeHtml(lastReadyMessage)}</div>
+      </div>
+      <p class="note-line">لم يتم احتساب كامل التأخيرات على العميل</p>
+    </div>
+
+    <footer class="footer">
+      <span>${escapeHtml(dept)}</span>
+      <span>تاريخ الإصدار: ${new Date().toLocaleDateString('ar-SA')}</span>
+    </footer>
+  </div>
+  <script>
+    (function () {
+      function fitOnePage() {
+        var sheet = document.getElementById('sheet');
+        if (!sheet) return;
+        sheet.style.transform = 'none';
+        // Usable A4 height with 8mm margins (~281mm)
+        var maxH = Math.round((281 / 25.4) * 96);
+        var h = sheet.scrollHeight;
+        if (h > maxH) {
+          var scale = Math.max(0.72, maxH / h);
+          sheet.style.transform = 'scale(' + scale + ')';
+        }
+      }
+      fitOnePage();
+      window.addEventListener('beforeprint', fitOnePage);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(fitOnePage).catch(function () {});
+      }
+    })();
+  </script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) {
+      showToast('⚠ تعذر فتح نافذة الطباعة/PDF', 'danger');
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => {
+      try { win.focus(); win.print(); } catch { /* ignore */ }
+    }, 450);
+    showToast('✅ جاهز للطباعة أو حفظ PDF — صفحة واحدةحدة', 'success');
   };
 
   const copyReadyMessage = async () => {
@@ -842,18 +1265,43 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==================[ Date calculator modal ]================== */
+  const updateDateCalcLabels = () => {
+    const label = document.getElementById('calc-result-label');
+    const submit = document.getElementById('calc-submit-label');
+    const durationLabel = document.getElementById('calc-duration-label');
+    if (dateCalcOp === 'count') {
+      if (label) label.textContent = dateCalcMode === 'working' ? 'عدد أيام العمل' : 'عدد الأيام التقويمية';
+      if (submit) submit.textContent = 'احسب عدد الأيام';
+    } else {
+      if (label) label.textContent = 'تاريخ الانتهاء';
+      if (submit) submit.textContent = 'احسب التاريخ';
+      if (durationLabel) {
+        durationLabel.textContent = dateCalcMode === 'working' ? 'عدد أيام العمل' : 'عدد الأيام التقويمية';
+      }
+    }
+  };
+
+  const setDateCalcOp = (op) => {
+    dateCalcOp = op;
+    document.querySelectorAll('.date-calc-op').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.op === op);
+    });
+    document.getElementById('calc-fields-count')?.classList.toggle('d-none', op !== 'count');
+    document.getElementById('calc-fields-end')?.classList.toggle('d-none', op !== 'end');
+    document.getElementById('calc-result')?.classList.add('d-none');
+    updateDateCalcLabels();
+  };
+
   const setDateCalcMode = (mode) => {
     dateCalcMode = mode;
     document.querySelectorAll('.date-calc-mode').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.mode === mode);
     });
-    const label = document.getElementById('calc-result-label');
-    if (label) {
-      label.textContent = mode === 'working' ? 'عدد أيام العمل' : 'عدد الأيام التقويمية';
-    }
-    const fromVal = document.getElementById('calc-from-date')?.value;
-    const toVal = document.getElementById('calc-to-date')?.value;
-    if (fromVal && toVal) runDateCalc();
+    updateDateCalcLabels();
+    const ready = dateCalcOp === 'count'
+      ? (document.getElementById('calc-from-date')?.value && document.getElementById('calc-to-date')?.value)
+      : (document.getElementById('calc-start-date')?.value && document.getElementById('calc-duration')?.value);
+    if (ready) runDateCalc();
   };
 
   /** Count working days after `from` through `to` inclusive; collect skipped Fridays/holidays. */
@@ -878,36 +1326,31 @@ document.addEventListener('DOMContentLoaded', () => {
     return { working, skipped };
   };
 
-  const runDateCalc = () => {
-    const fromVal = document.getElementById('calc-from-date').value;
-    const toVal = document.getElementById('calc-to-date').value;
-    if (!fromVal || !toVal) {
-      showToast('⚠ يرجى تعبئة من تاريخ وإلى تاريخ', 'danger');
-      return;
+  const addWorkingDays = (startDate, days) => {
+    const holidaySet = allHolidayDateSet();
+    const skipped = [];
+    let remaining = days - 1;
+    let end = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    while (remaining > 0) {
+      end = addCalendarDays(end, 1);
+      const iso = formatLocalDate(end);
+      if (end.getDay() === 5) {
+        skipped.push({ date: iso, reason: 'جمعة' });
+      } else if (holidaySet.has(iso)) {
+        const h = holidays.find(x => expandHolidayDates(x).includes(iso));
+        skipped.push({ date: iso, reason: h?.name || 'إجازة' });
+      } else {
+        remaining--;
+      }
     }
+    return { end, skipped };
+  };
 
-    const fromDate = parseLocalDate(fromVal);
-    const toDate = parseLocalDate(toVal);
-    if (toDate < fromDate) {
-      showToast('⚠ تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو يساويه', 'danger');
-      return;
-    }
-
-    document.getElementById('calc-result').classList.remove('d-none');
-    const resultEl = document.getElementById('calc-days-result');
+  const showSkippedList = (skipped) => {
     const skippedCountEl = document.getElementById('calc-skipped-count');
     const wrap = document.getElementById('calc-skipped-wrap');
     const list = document.getElementById('calc-skipped-list');
-
-    if (dateCalcMode === 'calendar') {
-      const days = calendarDaysBetween(fromDate, toDate);
-      if (resultEl) resultEl.textContent = arabicDays(days);
-      if (skippedCountEl) skippedCountEl.textContent = 'حساب تقويمي (يشمل الجمع والإجازات)';
-      wrap?.classList.add('d-none');
-      if (list) list.innerHTML = '';
-    } else {
-      const { working, skipped } = countWorkingDaysInRange(fromDate, toDate);
-      if (resultEl) resultEl.textContent = arabicDays(working);
+    if (dateCalcMode === 'working') {
       if (skippedCountEl) skippedCountEl.textContent = `تم استثناء ${arabicDays(skipped.length)}`;
       if (skipped.length) {
         wrap?.classList.remove('d-none');
@@ -920,6 +1363,61 @@ document.addEventListener('DOMContentLoaded', () => {
         wrap?.classList.add('d-none');
         if (list) list.innerHTML = '';
       }
+    } else {
+      if (skippedCountEl) skippedCountEl.textContent = 'حساب تقويمي (يشمل الجمع والإجازات)';
+      wrap?.classList.add('d-none');
+      if (list) list.innerHTML = '';
+    }
+  };
+
+  const runDateCalc = () => {
+    document.getElementById('calc-result')?.classList.remove('d-none');
+    const resultEl = document.getElementById('calc-days-result');
+
+    if (dateCalcOp === 'count') {
+      const fromVal = document.getElementById('calc-from-date').value;
+      const toVal = document.getElementById('calc-to-date').value;
+      if (!fromVal || !toVal) {
+        showToast('⚠ يرجى تعبئة من تاريخ وإلى تاريخ', 'danger');
+        return;
+      }
+      const fromDate = parseLocalDate(fromVal);
+      const toDate = parseLocalDate(toVal);
+      if (toDate < fromDate) {
+        showToast('⚠ تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو يساويه', 'danger');
+        return;
+      }
+      if (dateCalcMode === 'calendar') {
+        if (resultEl) resultEl.textContent = arabicDays(calendarDaysBetween(fromDate, toDate));
+        showSkippedList([]);
+      } else {
+        const { working, skipped } = countWorkingDaysInRange(fromDate, toDate);
+        if (resultEl) resultEl.textContent = arabicDays(working);
+        showSkippedList(skipped);
+      }
+      return;
+    }
+
+    const startVal = document.getElementById('calc-start-date').value;
+    const durationVal = document.getElementById('calc-duration').value;
+    if (!startVal || !durationVal) {
+      showToast('⚠ يرجى تعبئة تاريخ البداية والمدة', 'danger');
+      return;
+    }
+    const duration = parseInt(durationVal, 10);
+    if (isNaN(duration) || duration < 1) {
+      showToast('⚠ المدة غير صحيحة', 'danger');
+      return;
+    }
+    const start = parseLocalDate(startVal);
+    if (dateCalcMode === 'calendar') {
+      const end = addCalendarDays(start, duration - 1);
+      if (resultEl) resultEl.textContent = formatLocalDate(end);
+      showSkippedList([]);
+    } else {
+      const { end, skipped } = addWorkingDays(start, duration);
+      if (resultEl) resultEl.textContent = formatLocalDate(end);
+      showSkippedList(skipped);
     }
   };
 
@@ -996,9 +1494,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.date-calc-mode').forEach(btn => {
     btn.addEventListener('click', () => setDateCalcMode(btn.dataset.mode));
   });
+  document.querySelectorAll('.date-calc-op').forEach(btn => {
+    btn.addEventListener('click', () => setDateCalcOp(btn.dataset.op));
+  });
   document.getElementById('btn-run-date-calc')?.addEventListener('click', runDateCalc);
 
-  calculateContractDelayBtn?.addEventListener('click', calculateContractDelays);
+  calculateContractDelayBtn?.addEventListener('click', () => calculateContractDelays(true));
   contractDurationInput?.addEventListener('input', updateGraceUI);
   [contractDateInput, contractDurationInput, actualWorkOrderInput, actualPaymentInput].forEach(el => {
     el?.addEventListener('input', () => el.classList.remove('is-invalid'));
@@ -1007,17 +1508,76 @@ document.addEventListener('DOMContentLoaded', () => {
     radio.addEventListener('change', () => {
       updateGraceUI();
       if (!contractDelayResultsEl?.classList.contains('d-none')) {
-        calculateContractDelays();
+        calculateContractDelays(false);
       }
     });
   });
   document.getElementById('btn-copy-message')?.addEventListener('click', copyReadyMessage);
+  document.getElementById('btn-export-pdf')?.addEventListener('click', exportDelayPdf);
+
+  document.getElementById('holiday-search')?.addEventListener('input', renderHolidayCalendar);
+  document.getElementById('holiday-type-filter')?.addEventListener('change', renderHolidayCalendar);
+
+  document.getElementById('calc-history-list')?.addEventListener('click', async (e) => {
+    const loadId = e.target.closest('[data-history-load]')?.dataset.historyLoad;
+    const copyId = e.target.closest('[data-history-copy]')?.dataset.historyCopy;
+    const delId = e.target.closest('[data-history-delete]')?.dataset.historyDelete;
+    if (loadId) loadHistoryEntry(loadId);
+    if (copyId) {
+      const item = calcHistory.find(x => x.id === copyId);
+      if (item?.message) {
+        try {
+          await navigator.clipboard.writeText(item.message);
+          showToast('✅ تم نسخ رسالة السجل', 'success');
+        } catch {
+          showToast('⚠ تعذر النسخ', 'danger');
+        }
+      }
+    }
+    if (delId) {
+      calcHistory = calcHistory.filter(x => x.id !== delId);
+      saveHistoryStore();
+      renderHistory();
+      showToast('✅ تم حذف العنصر من السجل', 'success');
+    }
+  });
+  document.getElementById('btn-clear-history')?.addEventListener('click', () => {
+    if (!calcHistory.length) return;
+    if (!confirm('مسح كل سجل الحسابات؟')) return;
+    calcHistory = [];
+    saveHistoryStore();
+    renderHistory();
+    showToast('✅ تم مسح السجل', 'success');
+  });
+
+  document.getElementById('btn-save-branding')?.addEventListener('click', saveBranding);
+  document.getElementById('company-logo')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      branding.logoDataUrl = String(reader.result || '');
+      const preview = document.getElementById('company-logo-preview');
+      const img = document.getElementById('company-logo-img');
+      if (img && preview) {
+        img.src = branding.logoDataUrl;
+        preview.classList.remove('d-none');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('btn-clear-logo')?.addEventListener('click', () => {
+    branding.logoDataUrl = '';
+    document.getElementById('company-logo').value = '';
+    applyLogoPreview();
+    showToast('تم استعادة الشعار الافتراضي', 'success');
+  });
 
   // Enter key submits delay form
   document.getElementById('tab-delays')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.matches('input')) {
       e.preventDefault();
-      calculateContractDelays();
+      calculateContractDelays(true);
     }
   });
 
@@ -1025,8 +1585,12 @@ document.addEventListener('DOMContentLoaded', () => {
   holidayModal = new bootstrap.Modal(document.getElementById('holidayModal'));
   dateCalcModal = new bootstrap.Modal(document.getElementById('dateCalcModal'));
   loadHolidays();
+  loadBranding();
+  loadHistory();
   initYearSelect();
   refreshHolidayViews();
+  renderHistory();
   updateGraceUI();
+  setDateCalcOp('count');
   setDateCalcMode('calendar');
 });

@@ -379,6 +379,30 @@ body {
   font-weight: 800;
 }
 
+.holiday-filters {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem 0;
+}
+
+.holiday-filters .form-control,
+.holiday-filters .form-select {
+  border: none;
+  font-weight: 600;
+}
+
+.month-group { display: flex; flex-direction: column; gap: 0.55rem; }
+
+.month-group-title {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.15rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 0.15rem;
+}
+
 .panel-card-body {
   padding: 0.85rem;
   display: flex;
@@ -386,6 +410,95 @@ body {
   gap: 0.65rem;
   max-height: 640px;
   overflow: auto;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.history-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.btn-pdf-report {
+  background: #b91c1c;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+}
+.btn-pdf-report:hover { background: #991b1b; color: #fff; }
+
+.branding-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 0.75rem !important;
+}
+
+.logo-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.logo-preview {
+  margin-top: 0.5rem;
+  padding: 0.65rem;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.logo-preview img {
+  max-height: 64px;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.date-calc-ops {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.date-calc-op {
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 0.65rem 0.5rem;
+  font-weight: 800;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.date-calc-op.active {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
 }
 
 .empty-state {
