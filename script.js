@@ -261,20 +261,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const saveHolidays = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(holidays));
 
+  /** Always ensure official holidays exist for 2020–2035; keep manual entries. */
+  const ensureOfficialPrefill = () => {
+    const official = buildOfficialHolidays();
+    const manuals = holidays.filter(h => h.manual);
+    const officialKeys = new Set(official.map(rangeKey));
+    const keptManual = manuals.filter(h => !officialKeys.has(rangeKey(h)));
+    holidays = [...official, ...keptManual];
+    saveHolidays();
+  };
+
   const loadHolidays = () => {
     const v2 = localStorage.getItem(STORAGE_KEY);
     if (v2) {
       holidays = migrateLegacy(JSON.parse(v2));
-      return;
+    } else {
+      const legacy = localStorage.getItem(LEGACY_KEY);
+      holidays = legacy ? migrateLegacy(JSON.parse(legacy)) : [];
     }
-    const legacy = localStorage.getItem(LEGACY_KEY);
-    if (legacy) {
-      holidays = migrateLegacy(JSON.parse(legacy));
-      saveHolidays();
-      return;
-    }
-    holidays = buildOfficialHolidays();
-    saveHolidays();
+    // Prefill / backfill official calendar through 2035 on every load
+    ensureOfficialPrefill();
   };
 
   /* ==================[ KPI / Views ]================== */
@@ -486,13 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const fillAllYears = () => {
-    const official = buildOfficialHolidays();
-    const manuals = holidays.filter(h => h.manual);
-    const officialKeys = new Set(official.map(rangeKey));
-    // Keep manuals that aren't exact duplicates of fresh official
-    const keptManual = manuals.filter(h => !officialKeys.has(rangeKey(h)));
-    holidays = [...official, ...keptManual];
-    saveHolidays();
+    ensureOfficialPrefill();
     refreshHolidayViews();
     showToast('✅ تم ملء الإجازات الرسمية 2020–2035', 'success');
   };
