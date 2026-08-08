@@ -45,7 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let branding = {
     companyName: DEFAULT_BRANDING.companyName,
     footer: DEFAULT_BRANDING.footer,
-    logoDataUrl: ''
+    logoDataUrl: '',
+    includeInMessage: true
   };
 
   const defaultLogoSrc = () => {
@@ -796,37 +797,83 @@ document.addEventListener('DOMContentLoaded', () => {
     branding = {
       companyName: (stored.companyName || '').trim() || DEFAULT_BRANDING.companyName,
       footer: (stored.footer || '').trim() || DEFAULT_BRANDING.footer,
-      logoDataUrl: stored.logoDataUrl || ''
+      logoDataUrl: stored.logoDataUrl || '',
+      includeInMessage: stored.includeInMessage !== false
     };
     // Seed defaults once if nothing was saved yet
     if (!localStorage.getItem(BRANDING_KEY)) {
       localStorage.setItem(BRANDING_KEY, JSON.stringify({
         companyName: branding.companyName,
         footer: branding.footer,
-        logoDataUrl: ''
+        logoDataUrl: '',
+        includeInMessage: true
       }));
     }
     const nameEl = document.getElementById('company-name');
     const footerEl = document.getElementById('company-footer');
+    const includeEl = document.getElementById('include-branding-in-message');
     if (nameEl) nameEl.value = branding.companyName;
     if (footerEl) footerEl.value = branding.footer;
+    if (includeEl) includeEl.checked = branding.includeInMessage !== false;
     applyLogoPreview();
   };
 
-  const saveBranding = () => {
+  const refreshReadyMessageFromSnapshot = () => {
+    if (!lastCalcSnapshot || !readyMessageEl) return false;
+    const s = lastCalcSnapshot;
+    lastReadyMessage = buildReadyMessage({
+      contractDate: parseLocalDate(s.contractDate),
+      duration: s.duration,
+      payElapsed: s.payElapsed,
+      payPenalty: s.payPenalty,
+      payGrace: s.payGrace,
+      paymentIso: s.payDate,
+      woElapsed: s.woElapsed,
+      woPenalty: s.woPenalty,
+      repGrace: s.repGrace,
+      woIso: s.woDate
+    });
+    readyMessageEl.textContent = lastReadyMessage;
+    lastCalcSnapshot = { ...s, message: lastReadyMessage };
+    return true;
+  };
+
+  const persistBranding = ({ toast = true } = {}) => {
+    const includeEl = document.getElementById('include-branding-in-message');
     branding = {
       companyName: (document.getElementById('company-name')?.value || '').trim() || DEFAULT_BRANDING.companyName,
       footer: (document.getElementById('company-footer')?.value || '').trim() || DEFAULT_BRANDING.footer,
-      logoDataUrl: branding.logoDataUrl || ''
+      logoDataUrl: branding.logoDataUrl || '',
+      includeInMessage: includeEl ? !!includeEl.checked : branding.includeInMessage !== false
     };
     localStorage.setItem(BRANDING_KEY, JSON.stringify(branding));
     const nameEl = document.getElementById('company-name');
     const footerEl = document.getElementById('company-footer');
     if (nameEl) nameEl.value = branding.companyName;
     if (footerEl) footerEl.value = branding.footer;
+    if (includeEl) includeEl.checked = branding.includeInMessage !== false;
     applyLogoPreview();
-    showToast('✅ تم حفظ هوية الشركة', 'success');
+    const updated = refreshReadyMessageFromSnapshot();
+    if (!toast) return updated;
+    if (updated) {
+      showToast(
+        branding.includeInMessage
+          ? '✅ تم التحديث — الرسالة تتضمن بيانات الهوية'
+          : '✅ تم التحديث — الرسالة بدون بيانات الهوية',
+        'success'
+      );
+    } else {
+      showToast(
+        branding.includeInMessage
+          ? '✅ تم الحفظ — سيظهر الاسم والتذييل في الرسالة بعد الحساب'
+          : '✅ تم الحفظ — الرسالة القادمة بدون اسم الشركة والتذييل',
+        'success'
+      );
+    }
+    return updated;
   };
+
+  const saveBranding = () => persistBranding({ toast: true });
 
   const buildReadyMessage = ({
     contractDate, duration, payElapsed, payPenalty, payGrace, paymentIso,
@@ -843,8 +890,9 @@ document.addEventListener('DOMContentLoaded', () => {
       ? `${formatElapsedLabel(payPenalty)} (بعد خصم ${arabicDays(payGrace)} السماح) للسداد الكامل ، مدة العقد ${duration} يوم`
       : `لا تأخير (ضمن فترة السماح ${arabicDays(payGrace)}) للسداد الكامل ، مدة العقد ${duration} يوم`;
 
+    const includeBranding = branding.includeInMessage !== false;
     const lines = [];
-    if (branding.companyName) {
+    if (includeBranding && branding.companyName) {
       lines.push(branding.companyName, '');
     }
     lines.push(
@@ -866,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '',
       'لم يتم احتساب كامل التأخيرات على العميل'
     );
-    if (branding.footer) {
+    if (includeBranding && branding.footer) {
       lines.push('', branding.footer);
     }
     return lines.join('\n');
@@ -1602,6 +1650,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('btn-save-branding')?.addEventListener('click', saveBranding);
+  document.getElementById('include-branding-in-message')?.addEventListener('change', () => {
+    persistBranding({ toast: true });
+  });
   document.getElementById('company-logo')?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;

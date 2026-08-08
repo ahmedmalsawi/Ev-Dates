@@ -478,6 +478,80 @@ body {
   object-fit: contain;
 }
 
+.branding-toggle {
+  padding: 0.85rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
+  margin: 0;
+}
+
+.branding-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.branding-toggle-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.branding-toggle-ui {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  position: relative;
+  margin-top: 2px;
+  transition: background 0.2s ease;
+}
+
+.branding-toggle-ui::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: inset-inline-start 0.2s ease, transform 0.2s ease;
+}
+
+.branding-toggle input:checked + .branding-toggle-label .branding-toggle-ui {
+  background: #166534;
+}
+
+.branding-toggle input:checked + .branding-toggle-label .branding-toggle-ui::after {
+  inset-inline-start: 23px;
+}
+
+.branding-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.branding-toggle-text strong {
+  font-size: 0.92rem;
+  color: #1f2937;
+}
+
+.branding-toggle-text small {
+  color: #6b7280;
+  line-height: 1.4;
+}
+
 .date-calc-ops {
   display: grid;
   grid-template-columns: 1fr 1fr;
